@@ -107,29 +107,38 @@ function loadTileSets(){
         auxTilesets,
         auxTiles,
         auxTilePos,
-        c = 0;
-    dataTiles.animation = [];
+        c = 0,
+        imgTile = "";
+    dataTiles = [];
 
     for(var t = 0; t < mapJson.tilesets.length; t++){
         auxTilesets = mapJson.tilesets[t];
+        dataTiles[t] = {};
+        dataTiles[t].animation = [];
+
+        imgTile = mapJson.tilesets[t].image.split("/");
+        imgTile = imgTile[imgTile.length-1];
+        dataTiles[t].imgTile = imgTile;
+        dataTiles[t].firstgid = mapJson.tilesets[t].firstgid;
+        
         for(auxTiles in auxTilesets.tiles){
             if(auxTilesets.tiles[auxTiles].animation != undefined){
                 auxTilePos = parseInt(auxTiles) + parseInt(auxTilesets.firstgid);
 
-                dataTiles.animation[c] = {};
-                dataTiles.animation[c].tile = auxTilePos;
-                dataTiles.animation[c].animation = [];
+                dataTiles[t].animation[c] = {};
+                dataTiles[t].animation[c].tile = auxTilePos;
+                dataTiles[t].animation[c].animation = [];
                 for(var a = 0; a < auxTilesets.tiles[auxTiles].animation.length; a++){
-                    dataTiles.animation[c].animation[a] = {};
-                    dataTiles.animation[c].animation[a].tileid = parseInt(auxTilesets.tiles[auxTiles].animation[a].tileid) + 1;
-                    dataTiles.animation[c].animation[a].duration = auxTilesets.tiles[auxTiles].animation[a].duration;
+                    dataTiles[t].animation[c].animation[a] = {};
+                    dataTiles[t].animation[c].animation[a].tileid = parseInt(auxTilesets.tiles[auxTiles].animation[a].tileid) + 1;
+                    dataTiles[t].animation[c].animation[a].duration = auxTilesets.tiles[auxTiles].animation[a].duration;
                 }
 
                 c++;
             }
         }
     }
-
+    console.log(dataTiles);
     return dataTiles;
 }
 

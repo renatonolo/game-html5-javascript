@@ -82,7 +82,7 @@ function Main(){
                 ctx.map.draw(ctx.map, ctx.mapLoaded, ctx.elapsed, 1);
                 ctx.player.draw(ctx);
                 ctx.map.draw(ctx.map, ctx.mapLoaded, ctx.elapsed, 2);
-                //ctx.map.draw(ctx.map, ctx.mapLoaded, ctx.elapsed, 3);
+                ctx.map.draw(ctx.map, ctx.mapLoaded, ctx.elapsed, 3);
             }
 
             //Frame annimation

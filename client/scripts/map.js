@@ -12,8 +12,7 @@ function Map(canvas){
     this.tilesAnim = {};
 
     this.setup = function(){
-        this.imgTile = new Image();
-        this.imgTile.src = config.tilesheetPath;
+        this.imgTile = [];
     };
 
     this.load = function(websocket, ctxMain){
@@ -24,6 +23,13 @@ function Map(canvas){
         };
         websocket.callbackMapResponse = function(ctx, data){
             ctxMain.mapLoaded = data;
+            for(var i = 0; i < data.data.tilesets.length; i++){
+                ctx.imgTile[i] = {};
+                ctx.imgTile[i].image = new Image();
+                ctx.imgTile[i].image.src = "imgs/" + data.data.tilesets[i].imgTile;
+                ctx.imgTile[i].firstgid = data.data.tilesets[i].firstgid;
+            }
+            console.log(ctx.imgTile);
         };
         websocket.ctxMapResponse = this;
         websocket.sendMessage(JSON.stringify(action));
@@ -41,7 +47,6 @@ function Map(canvas){
     };
 
     this.draw = function(ctx, map, elapsed, level){
-        console.log(map);
         //for(var l = 0; l < map.data.length; l++){
         var l = level;
             for(var x = 0; x <= config.screenTileW; x++){
@@ -64,7 +69,9 @@ function Map(canvas){
             tileH = config.tileH,
             clipX = 0,
             clipY = 0,
-            timeLessAnim = 0;
+            timeLessAnim = 0,
+            imgToUse = null,
+            iImage = 0;
 
         pos = (y * config.screenTileW) - config.screenTileW + x;
         posX = x * config.tileW - config.tileW;
@@ -73,24 +80,38 @@ function Map(canvas){
                 
         tileId = map.data.map[l][pos - 1];
 
+        if(tileId == undefined) return;
+        
         //Animation calcs
-        for(var a = 0; a < map.data.tilesets.animation.length; a++){
-            if(tileId == map.data.tilesets.animation[a].tile){
+        
+        //Select ImgToUse
+        for(var ix = 0; ix < map.data.tilesets.length; ix++){
+            if((ix < (map.data.tilesets.length - 1) && tileId >= map.data.tilesets[ix].firstgid && tileId < map.data.tilesets[ix+1].firstgid)){
+                imgToUse = ctx.imgTile[ix].image;
+                iImage = ix;
+            } else if(ix == map.data.tilesets.length - 1 && tileId >= map.data.tilesets[ix].firstgid){
+                imgToUse = ctx.imgTile[ix].image;
+                iImage = ix;
+            }
+        }
+
+        for(var a = 0; a < map.data.tilesets[iImage].animation.length; a++){
+            if(tileId == map.data.tilesets[iImage].animation[a].tile){
                 tileAnimated = true;
                 if(ctx.tilesAnim[tileId] == undefined){
-                    tileId = map.data.tilesets.animation[a].animation[0].tileid;
+                    tileId = map.data.tilesets[iImage].animation[a].animation[0].tileid;
                     ctx.tilesAnim[tileId] = {};
                     ctx.tilesAnim[tileId].timeLastAnim = 0;
                     ctx.tilesAnim[tileId].position = 0;
                 } else {
-                    if(ctx.tilesAnim[tileId].timeLastAnim >= map.data.tilesets.animation[a].animation[ctx.tilesAnim[tileId].position].duration){
+                    if(ctx.tilesAnim[tileId].timeLastAnim >= map.data.tilesets[iImage].animation[a].animation[ctx.tilesAnim[tileId].position].duration){
                         ctx.tilesAnim[tileId].position++;
-                        if(ctx.tilesAnim[tileId].position >= map.data.tilesets.animation[a].animation.length) ctx.tilesAnim[tileId].position = 0;
+                        if(ctx.tilesAnim[tileId].position >= map.data.tilesets[iImage].animation[a].animation.length) ctx.tilesAnim[tileId].position = 0;
                         ctx.tilesAnim[tileId].timeLastAnim = 0;
-                        tileId = map.data.tilesets.animation[a].animation[ctx.tilesAnim[tileId].position].tileid;
+                        tileId = map.data.tilesets[iImage].animation[a].animation[ctx.tilesAnim[tileId].position].tileid;
                     } else {
                         ctx.tilesAnim[tileId].timeLastAnim += elapsed;
-                        tileId = map.data.tilesets.animation[a].animation[ctx.tilesAnim[tileId].position].tileid;
+                        tileId = map.data.tilesets[iImage].animation[a].animation[ctx.tilesAnim[tileId].position].tileid;
                     }
                 }
             }
@@ -98,15 +119,17 @@ function Map(canvas){
         //End of animation calcs
         
         if(tileId == 0) return;
+        var tileClip = tileId;
+        if(iImage > 0) tileClip = tileId - map.data.tilesets[iImage].firstgid + 1;
 
         //if( ctx.oldMap.data == undefined || tileId != ctx.oldMap.data[l][pos-1]){
-            if(tileId > 0 && tileId % config.numTilePerLine == 0) clipTileX = config.numTilePerLine * config.tileW - config.tileW;
-            else clipTileX = parseInt((tileId % config.numTilePerLine)) * config.tileW - config.tileW;
-            if(tileId > 0 && tileId <= config.numTilePerLine) clipTileY = 0;
-            else if(tileId > 0 && tileId % config.numTilePerLine == 0) clipTileY = parseInt((tileId / config.numTilePerLine)) * config.tileH - config.tileH;
-            else clipTileY = parseInt((tileId / config.numTilePerLine)) * config.tileH;
+            if(tileClip > 0 && tileClip % config.numTilePerLine == 0) clipTileX = config.numTilePerLine * config.tileW - config.tileW;
+            else clipTileX = parseInt((tileClip % config.numTilePerLine)) * config.tileW - config.tileW;
+            if(tileClip > 0 && tileClip <= config.numTilePerLine) clipTileY = 0;
+            else if(tileClip > 0 && tileClip % config.numTilePerLine == 0) clipTileY = parseInt((tileClip / config.numTilePerLine)) * config.tileH - config.tileH;
+            else clipTileY = parseInt((tileClip / config.numTilePerLine)) * config.tileH;
 
-            ctx.canvas.drawImage(ctx.imgTile, clipTileX, clipTileY, config.tileW, config.tileH, posX, posY, config.tileW, config.tileH);
+            ctx.canvas.drawImage(imgToUse, clipTileX, clipTileY, config.tileW, config.tileH, posX, posY, config.tileW, config.tileH);
         //}
     };
 }
