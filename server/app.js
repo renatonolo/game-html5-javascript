@@ -143,6 +143,8 @@ function loadTileSets(){
 }
 
 function checkTileInfo(ws, x, y){
+    console.log("X: " + x);
+    console.log("Y: " + y);
     var tileInfo = {
         collision: false,
         x: x,

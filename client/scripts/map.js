@@ -29,7 +29,6 @@ function Map(canvas){
                 ctx.imgTile[i].image.src = "imgs/" + data.data.tilesets[i].imgTile;
                 ctx.imgTile[i].firstgid = data.data.tilesets[i].firstgid;
             }
-            console.log(ctx.imgTile);
         };
         websocket.ctxMapResponse = this;
         websocket.sendMessage(JSON.stringify(action));

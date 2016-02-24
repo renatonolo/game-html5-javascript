@@ -30,7 +30,7 @@ function Main(){
         this.player = new Player("123456", "123456");
 
         this.map.setup();
-        this.mouse.setup();
+        this.mouse.setup(this);
 
         this.fps = config.fps;
         this.fpsInterval = 1000 / this.fps;
@@ -77,9 +77,9 @@ function Main(){
             ctx.map.load(ctx.websocket, ctx);
 
             if(ctx.mapLoaded != null){
-                ctx.mouse.draw();
                 ctx.map.draw(ctx.map, ctx.mapLoaded, ctx.elapsed, 0);
                 ctx.map.draw(ctx.map, ctx.mapLoaded, ctx.elapsed, 1);
+                ctx.mouse.draw();
                 ctx.player.draw(ctx);
                 ctx.map.draw(ctx.map, ctx.mapLoaded, ctx.elapsed, 2);
                 ctx.map.draw(ctx.map, ctx.mapLoaded, ctx.elapsed, 3);
