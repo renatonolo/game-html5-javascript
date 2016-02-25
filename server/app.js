@@ -103,13 +103,14 @@ function loadTilesRange(_x, _y){
 }
 
 function loadTileSets(){
-    var dataTiles = {},
+    var dataTiles = [],
         auxTilesets,
         auxTiles,
+        auxColision,
         auxTilePos,
         c = 0,
+        col = 0,
         imgTile = "";
-    dataTiles = [];
 
     for(var t = 0; t < mapJson.tilesets.length; t++){
         auxTilesets = mapJson.tilesets[t];
@@ -120,6 +121,7 @@ function loadTileSets(){
         imgTile = imgTile[imgTile.length-1];
         dataTiles[t].imgTile = imgTile;
         dataTiles[t].firstgid = mapJson.tilesets[t].firstgid;
+        dataTiles[t].collision = [];
         
         for(auxTiles in auxTilesets.tiles){
             if(auxTilesets.tiles[auxTiles].animation != undefined){
@@ -137,16 +139,26 @@ function loadTileSets(){
                 c++;
             }
         }
+
+        for(auxColision in auxTilesets.tileproperties){
+            if(auxTilesets.tileproperties[auxColision].collision){
+                dataTiles[t].collision[col] = auxColision;
+                col++;
+            }
+        }
     }
-    console.log(dataTiles);
+    //console.log(dataTiles);
     return dataTiles;
 }
 
 function checkTileInfo(ws, x, y){
-    console.log("X: " + x);
-    console.log("Y: " + y);
+    var collision = getCollision(x, y);
+    var tileId = collision.lastId;
+
     var tileInfo = {
-        collision: false,
+        lastId: collision.lastId,
+        firstId: collision.firstId,
+        collision: collision.collision,
         x: x,
         y: y,
         //way: ["east", "east", "east", "east", "east", "east", "east", "east", "east", "east", "east", "east", "east"]
@@ -154,11 +166,39 @@ function checkTileInfo(ws, x, y){
         //way: ["north", "north", "north", "north", "north", "north", "north", "north"]
         //way: ["south", "south", "south", "south", "south", "south", "south", "south"]
     };
+
     var response = {
         action: "checkTileInfoResponse",
         data: tileInfo
     };
+
     ws.send(JSON.stringify(response));
+}
+
+function getCollision(x, y){
+    var pos = ((y + 1) * mapJson.width) - mapJson.width + x + 1;
+    var collision = false;
+    var tileId = 0;
+
+    for(var i = 0; i < mapJson.layers.length; i++){
+        if(mapJson.layers[i].data[(pos-1)] != 0){
+            tileId = mapJson.layers[i].data[(pos-1)];
+            
+            for(var j = 0; j < tilesets.length; j++){
+                for(var k = 0; k < tilesets[j].collision.length; k++){
+                    if((parseInt(tilesets[j].collision[k]) + tilesets[j].firstgid) == mapJson.layers[i].data[(pos-1)]){
+                        collision = true;
+                    }
+                }
+            }
+        }
+    }
+
+    tile = {};
+    tile.firstId = mapJson.layers[0].data[(pos-1)];
+    tile.lastId = tileId;
+    tile.collision = collision;
+    return tile;
 }
 
 function loadPlayer(ws, account, password){

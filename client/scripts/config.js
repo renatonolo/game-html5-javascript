@@ -4,6 +4,7 @@ var config = {
     tileW: 32,
     tileH: 32,
     numTilePerLine: 8,
+    statusTextTime: 5000,
 
     tilesheetPath: "imgs/tilesheet1.png",
     targetPath: "imgs/target.png",

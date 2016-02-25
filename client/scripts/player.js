@@ -25,7 +25,9 @@ function Player(acc, pass){
     this.offsetY = 0;
     this.wayCount = 0;
 
-    this.main = null;
+    this.statusText = "";
+    this.statusTextTime = 0;
+    this.printedStatusText = "";
 
     this.setup = function(ctx){
         this.imgPlayer = new Image();
@@ -173,6 +175,8 @@ function Player(acc, pass){
         console.log(data);
         if(!data.data.collision){
             ctx.gotoTile(ctx, data);
+        } else {
+            ctx.statusText = "You can't go to this tile.";
         }
     }
 
@@ -180,6 +184,27 @@ function Player(acc, pass){
         ctx.walking = true;
         ctx.wayToGo = data.data.way;
         ctx.direction = data.data.way[0];
-        ctx.main = ctx;
+    }
+
+    this.drawStatusText = function(ctx, elapsed){
+        if(ctx.player.statusText != ""){
+            ctx.player.printedStatusText = ctx.player.statusText;
+            ctx.foreground.font = "bold 12px Verdana";
+            ctx.foreground.fillStyle = "#FFFFFF";
+            ctx.foreground.textAlign = "center";
+            ctx.foreground.fillText(ctx.player.printedStatusText, ((config.screenTileW * config.tileW) / 2), (config.screenTileH * config.tileH - 4));
+            ctx.player.statusTextTime = 0;
+            ctx.player.statusText = "";
+        } else {
+            if(ctx.player.statusTextTime > config.statusTextTime && ctx.player.printedStatusText != ""){
+                ctx.player.printedStatusText = "";
+            } else {
+                ctx.foreground.font = "bold 12px Verdana";
+                ctx.foreground.fillStyle = "#FFFFFF";
+                ctx.foreground.textAlign = "center";
+                ctx.foreground.fillText(ctx.player.printedStatusText, ((config.screenTileW * config.tileW) / 2), (config.screenTileH * config.tileH - 4));
+                ctx.player.statusTextTime += elapsed;
+            }
+        }
     }
 }
