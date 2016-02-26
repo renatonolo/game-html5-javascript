@@ -197,7 +197,7 @@ function BeginnerDimensions(){
         dimensions.west.walking[1].w = 23;
         dimensions.west.walking[1].h = 55;
         dimensions.west.walking[1].topOffset = 1;
-        dimensions.west.walking[1].leftOffset = -2;
+        dimensions.west.walking[1].leftOffset = -6;
 
         //Walking 3
         dimensions.west.walking[2].x = 135;

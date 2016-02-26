@@ -70,9 +70,7 @@ function Main(){
              * Game Loop Area
              */
             if(ctx.mouse.mouseClick.x > 0 && ctx.mouse.mouseClick.y > 0) {
-                console.log(ctx.mouse.mouseClick);
-                if(ctx.player.walking) ctx.player.wayCount = -1;
-                else ctx.player.wayCount = 0;
+                ctx.player.wayCount = 0;
                 ctx.map.checkTileInfo(ctx.websocket, ctx.mouse.mouseClick, ctx.player, ctx.player.handleTileInfo);
                 ctx.mouse.mouseClick.x = 0;
                 ctx.mouse.mouseClick.y = 0;
