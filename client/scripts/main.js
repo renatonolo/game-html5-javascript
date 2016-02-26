@@ -45,7 +45,11 @@ function Main(){
 
     this.run = function(ctx, playerLoaded){
         if(playerLoaded == undefined) ctx.player.setup(ctx);
-        if(playerLoaded == true) ctx.mainLoop(ctx);
+        if(playerLoaded == true) {
+            ctx.map.position.x = ctx.player.position.x;
+            ctx.map.position.y = ctx.player.position.y;
+            ctx.mainLoop(ctx);
+        }
     };
 
     this.mainLoop = function(ctx){
@@ -66,6 +70,9 @@ function Main(){
              * Game Loop Area
              */
             if(ctx.mouse.mouseClick.x > 0 && ctx.mouse.mouseClick.y > 0) {
+                console.log(ctx.mouse.mouseClick);
+                if(ctx.player.walking) ctx.player.wayCount = -1;
+                else ctx.player.wayCount = 0;
                 ctx.map.checkTileInfo(ctx.websocket, ctx.mouse.mouseClick, ctx.player, ctx.player.handleTileInfo);
                 ctx.mouse.mouseClick.x = 0;
                 ctx.mouse.mouseClick.y = 0;

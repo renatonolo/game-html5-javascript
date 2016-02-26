@@ -38,7 +38,8 @@ function Map(canvas){
         var action = {
             action: 'checkTileInfo',
             x: pos.mapX,
-            y: pos.mapY
+            y: pos.mapY,
+            account: ctxCallback.account
         };
         websocket.callbackCheckTileInfoResponse = callback;
         websocket.ctxCheckTileInfoResponse = ctxCallback;

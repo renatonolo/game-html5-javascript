@@ -77,6 +77,7 @@ function Player(acc, pass){
             posY += ctx.player.offsetY - 18;
             
             ctx.foreground.drawImage(ctx.player.imgPlayer, ctx.player.playerDimensions[ctx.player.direction].stopped[0].x, ctx.player.playerDimensions[ctx.player.direction].stopped[0].y, ctx.player.playerDimensions[ctx.player.direction].stopped[0].w, ctx.player.playerDimensions[ctx.player.direction].stopped[0].h, posX, posY, ctx.player.playerDimensions[ctx.player.direction].stopped[0].w, ctx.player.playerDimensions[ctx.player.direction].stopped[0].h);
+            //ctx.player.sendPosition(ctx.player);
         } else {
             if(ctx.player.frameAnimation % 10 == 0){
                 ctx.player.walkingAnnimation++;
@@ -94,6 +95,7 @@ function Player(acc, pass){
                         ctx.player.walking = false;
                     }
                     ctx.player.position.y++;
+                    ctx.player.sendPosition(ctx.player);
                 }
             } else if(ctx.player.direction == "north"){
                 ctx.player.offsetY--;
@@ -106,6 +108,7 @@ function Player(acc, pass){
                         ctx.player.walking = false;
                     }
                     ctx.player.position.y--;
+                    ctx.player.sendPosition(ctx.player);
                 }
             } else if(ctx.player.direction == "east"){
                 ctx.player.offsetX++;
@@ -118,6 +121,7 @@ function Player(acc, pass){
                         ctx.player.walking = false;
                     }
                     ctx.player.position.x++;
+                    ctx.player.sendPosition(ctx.player);
                 }
             } else if(ctx.player.direction == "west"){
                 ctx.player.offsetX--;
@@ -130,6 +134,7 @@ function Player(acc, pass){
                         ctx.player.walking = false;
                     }
                     ctx.player.position.x--;
+                    ctx.player.sendPosition(ctx.player);
                 }
             }
 
@@ -181,9 +186,11 @@ function Player(acc, pass){
     }
 
     this.gotoTile = function(ctx, data){
-        ctx.walking = true;
-        ctx.wayToGo = data.data.way;
-        ctx.direction = data.data.way[0];
+        if(data.data.way.length > 0){
+            ctx.walking = true;
+            ctx.wayToGo = data.data.way;
+            ctx.direction = data.data.way[0];
+        }
     }
 
     this.drawStatusText = function(ctx, elapsed){
@@ -206,5 +213,14 @@ function Player(acc, pass){
                 ctx.player.statusTextTime += elapsed;
             }
         }
+    }
+
+    this.sendPosition = function(ctx){
+        var action = {
+            action: "sendPosition",
+            account: ctx.account,
+            position: ctx.position
+        };
+        ctx.websocket.sendMessage(JSON.stringify(action));
     }
 }
