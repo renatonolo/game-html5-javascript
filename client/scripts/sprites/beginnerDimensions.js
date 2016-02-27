@@ -128,7 +128,7 @@ function BeginnerDimensions(){
         dimensions.east.stopped[0].w = 21;
         dimensions.east.stopped[0].h = 60;
         dimensions.east.stopped[0].topOffset = 2;
-        dimensions.east.stopped[0].leftOffset = 1;
+        dimensions.east.stopped[0].leftOffset = 4;
 
         //Walking 1
         dimensions.east.walking[0].x = 69;
@@ -181,7 +181,7 @@ function BeginnerDimensions(){
         dimensions.west.stopped[0].w = 18;
         dimensions.west.stopped[0].h = 59;
         dimensions.west.stopped[0].topOffset = 1;
-        dimensions.west.stopped[0].leftOffset = 0;
+        dimensions.west.stopped[0].leftOffset = 6;
 
         //Walking 1
         dimensions.west.walking[0].x = 70;
@@ -189,7 +189,7 @@ function BeginnerDimensions(){
         dimensions.west.walking[0].w = 20;
         dimensions.west.walking[0].h = 58;
         dimensions.west.walking[0].topOffset = 2;
-        dimensions.west.walking[0].leftOffset = 0;
+        dimensions.west.walking[0].leftOffset = 6;
 
         //Walking 2
         dimensions.west.walking[1].x = 99;
@@ -197,7 +197,7 @@ function BeginnerDimensions(){
         dimensions.west.walking[1].w = 23;
         dimensions.west.walking[1].h = 55;
         dimensions.west.walking[1].topOffset = 1;
-        dimensions.west.walking[1].leftOffset = -6;
+        dimensions.west.walking[1].leftOffset = 2;
 
         //Walking 3
         dimensions.west.walking[2].x = 135;
@@ -205,7 +205,7 @@ function BeginnerDimensions(){
         dimensions.west.walking[2].w = 16;
         dimensions.west.walking[2].h = 58;
         dimensions.west.walking[2].topOffset = 2;
-        dimensions.west.walking[2].leftOffset = 0;
+        dimensions.west.walking[2].leftOffset = 5;
 
         //Walking 4
         dimensions.west.walking[3].x = 163;

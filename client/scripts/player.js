@@ -77,7 +77,7 @@ function Player(acc, pass){
             var posY = Math.round(config.screenTileH / 2) * config.tileH - (2 * config.tileH);
 
             var aux = player.position.x - ctx.map.position.x;
-            posX += aux * config.tileW;
+            posX += aux * config.tileW + player.playerDimensions[player.direction].stopped[0].leftOffset;
 
             aux = player.position.y - ctx.map.position.y;
             posY += aux * config.tileH;
@@ -136,7 +136,7 @@ function Player(acc, pass){
             var posY = Math.round(config.screenTileH / 2) * config.tileH - (2 * config.tileH);
 
             var aux = player.position.x - ctx.map.position.x;
-            posX += aux * config.tileW + player.offsetX + playerDimensions[player.direction].walking[player.walkingAnnimation].leftOffset;
+            posX += aux * config.tileW + player.offsetX + player.playerDimensions[player.direction].walking[player.walkingAnnimation].leftOffset;
 
             aux = player.position.y - ctx.map.position.y;
             posY += aux * config.tileH + player.offsetY;
