@@ -26,7 +26,6 @@ wss.on('connection', function connection(ws) {
                     player.loadPlayer(ws, data.account, data.password);
                     break;
                 case "checkTileInfo":
-                    console.log(data);
                     map.checkTileInfo(ws, data.account, data.x, data.y);
                     break;
                 case "sendPosition":

@@ -10,28 +10,36 @@ function Map(canvas){
     this.frameAnimation = 0;
     this.animation = 0;
     this.tilesAnim = {};
+    this.lastPosition = {
+        x: 0,
+        y: 0
+    };
 
     this.setup = function(){
         this.imgTile = [];
     };
 
     this.load = function(websocket, ctxMain){
-        var action = {
-            action: 'loadMap',
-            x: this.position.x,
-            y: this.position.y
-        };
-        websocket.callbackMapResponse = function(ctx, data){
-            ctxMain.mapLoaded = data;
-            for(var i = 0; i < data.data.tilesets.length; i++){
-                ctx.imgTile[i] = {};
-                ctx.imgTile[i].image = new Image();
-                ctx.imgTile[i].image.src = "imgs/" + data.data.tilesets[i].imgTile;
-                ctx.imgTile[i].firstgid = data.data.tilesets[i].firstgid;
-            }
-        };
-        websocket.ctxMapResponse = this;
-        websocket.sendMessage(JSON.stringify(action));
+        if(this.position.x != this.lastPosition.x || this.position.y != this.lastPosition.y){
+            var action = {
+                action: 'loadMap',
+                x: this.position.x,
+                y: this.position.y
+            };
+            websocket.callbackMapResponse = function(ctx, data){
+                ctxMain.mapLoaded = data;
+                ctx.lastPosition.x = ctx.position.x;
+                ctx.lastPosition.y = ctx.position.y;
+                for(var i = 0; i < data.data.tilesets.length; i++){
+                    ctx.imgTile[i] = {};
+                    ctx.imgTile[i].image = new Image();
+                    ctx.imgTile[i].image.src = "imgs/" + data.data.tilesets[i].imgTile;
+                    ctx.imgTile[i].firstgid = data.data.tilesets[i].firstgid;
+                }
+            };
+            websocket.ctxMapResponse = this;
+            websocket.sendMessage(JSON.stringify(action));
+        }
     };
 
     this.checkTileInfo = function(websocket, pos, ctxCallback, callback){
