@@ -59,7 +59,7 @@ function Player(acc, pass){
         }
 
         ctx.run(ctx, true);
-    }
+    };
 
     this.draw = function(ctx){
         switch(ctx.player.vocation){
@@ -96,7 +96,7 @@ function Player(acc, pass){
                         player.offsetY = 0;
                         player.position.y--;
                         player.wayCount++;
-                        //player.direction = player.wayToGo[player.wayCount];
+                        player.updateMapPosition(ctx, posX, posY);
                         player.sendPosition(player);
                     }
                 break;
@@ -106,7 +106,7 @@ function Player(acc, pass){
                         player.offsetY = 0;
                         player.position.y++;
                         player.wayCount++;
-                        //player.direction = player.wayToGo[player.wayCount];
+                        player.updateMapPosition(ctx, posX, posY);
                         player.sendPosition(player);
                     }
                 break;
@@ -116,7 +116,7 @@ function Player(acc, pass){
                         player.offsetX = 0;
                         player.position.x++;
                         player.wayCount++;
-                        //player.direction = player.wayToGo[player.wayCount];
+                        player.updateMapPosition(ctx, posX, posY);
                         player.sendPosition(player);
                     }
                 break;
@@ -126,7 +126,7 @@ function Player(acc, pass){
                         player.offsetX = 0;
                         player.position.x--;
                         player.wayCount++;
-                        //player.direction = player.wayToGo[player.wayCount];
+                        player.updateMapPosition(ctx, posX, posY);
                         player.sendPosition(player);
                     }
                 break;
@@ -150,7 +150,7 @@ function Player(acc, pass){
                 player.direction = player.wayToGo[player.wayCount];
             }
         }
-    }
+    };
 
     this.handleTileInfo = function(ctx, data){
         console.log(data);
@@ -159,7 +159,7 @@ function Player(acc, pass){
         } else {
             ctx.statusText = "You can't go to this tile.";
         }
-    }
+    };
 
     this.gotoTile = function(ctx, data){
         if(data.data.way.length > 0){
@@ -167,7 +167,7 @@ function Player(acc, pass){
             ctx.wayToGo = data.data.way;
             ctx.direction = data.data.way[0];
         }
-    }
+    };
 
     this.drawStatusText = function(ctx, elapsed){
         if(ctx.player.statusText != ""){
@@ -189,7 +189,7 @@ function Player(acc, pass){
                 ctx.player.statusTextTime += elapsed;
             }
         }
-    }
+    };
 
     this.sendPosition = function(ctx){
         var action = {
@@ -198,5 +198,21 @@ function Player(acc, pass){
             position: ctx.position
         };
         ctx.websocket.sendMessage(JSON.stringify(action));
+    };
+
+    this.updateMapPosition = function(ctxMain, posX, posY){
+        var midX = Math.round(config.screenTileW / 2);
+        var midY = Math.round(config.screenTileH / 2);
+
+        var limitXMin = ctxMain.map.position.x - midX + 1;
+        var limitXMax = ctxMain.map.position.x + midX - 1;
+
+        var limitYMin = ctxMain.map.position.y - midY + 1;
+        var limitYMax = ctxMain.map.position.y + midY - 1;
+
+        if(ctxMain.player.position.x == limitXMin && ctxMain.player.direction == "west") ctxMain.map.position.x = limitXMin - midX + 1;
+        if(ctxMain.player.position.x == limitXMax && ctxMain.player.direction == "east") ctxMain.map.position.x = limitXMax + midX - 1;
+        if(ctxMain.player.position.y == limitYMin && ctxMain.player.direction == "north") ctxMain.map.position.y = limitYMin - midY + 1;
+        if(ctxMain.player.position.y == limitYMax && ctxMain.player.direction == "south") ctxMain.map.position.y = limitYMax + midY - 2;
     }
 }
