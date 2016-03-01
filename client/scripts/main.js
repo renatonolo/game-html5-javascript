@@ -26,10 +26,10 @@ function Main(){
         this.foreground = this.canvas.getContext('2d');
         this.spanFps = document.getElementById("fps");
 
-        this.websocket = new Websocket('127.0.0.1', 9000);
+        this.websocket = new Websocket(config.hostWS, config.portWS);
         this.map = new Map(this.foreground);
         this.mouse = new Mouse(this.canvas, this.foreground);
-        this.player = new Player("123456789", "123456789");
+        this.player = new Player("123456", "123456");
         this.character = new Character();
 
         this.map.setup();

@@ -64,6 +64,7 @@ function PlayerClass(){
                     y: rows[0].position_y
                 }
             };
+            ctxPlayer.ws.uidPlayer = rows[0].uid;
         }
 
         var response = {
