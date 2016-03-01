@@ -22,7 +22,7 @@ wss.on('connection', function connection(ws) {
     clients.push(ws);
 
     ws.on('message', function incoming(message) {
-        console.log(ws);
+        //console.log(ws);
 
         var data = JSON.parse(message);
         if(typeof data === "object" && data.action != undefined){
