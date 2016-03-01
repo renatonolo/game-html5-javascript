@@ -3,13 +3,17 @@ var WebSocket = require('ws').Server,
         host: process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1',
         port: process.env.OPENSHIFT_NODEJS_PORT || 8080}),
     fs = require('fs'),
+    http = require('http'),
+    path = require('path'),
     mysql = require('mysql'),
     MysqlConnection = require('./classes/mysql.class.js'),
     Player = require('./classes/player.class.js'),
     Map = require('./classes/map.class.js');
     Character = require('./classes/character.class.js');
 
-var clients = [],
+var hostHttp = process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1',
+    portHttp = process.env.OPENSHIFT_NODEJS_PORT || 8000,
+    clients = [],
     mysqlClass = null,
     player = null,
     character = null,
@@ -56,6 +60,9 @@ wss.broadcast = function broadcast(data) {
 
 function setupServer(){
 
+    //
+    //SERVER SIDE
+    //
     var mysqlConn = new MysqlConnection();
     mysqlConn.mysql = mysql;
     var host = process.env.OPENSHIFT_MYSQL_DB_HOST || "127.0.0.1";
@@ -79,5 +86,70 @@ function setupServer(){
     fs.readFile(__dirname + '/maps/map.json', function(err, json){
         mapJson = JSON.parse(json.toString());
         map.setup(mapJson, mysqlConn);
+    });
+
+    //
+    //CLIENT SIDE
+    //
+    startHttpServer();
+}
+
+function startHttpServer(){
+    http.createServer( function(req, res) {
+
+        var now = new Date();
+
+        var filename = req.url || "index.html";
+        var ext = path.extname(filename);
+        var localPath = __dirname;
+
+        localPath = localPath.replace("/server", "");
+        localPath += "/client";
+
+        var validExtensions = {
+            ".html" : "text/html",          
+            ".js": "application/javascript", 
+            ".css": "text/css",
+            ".txt": "text/plain",
+            ".jpg": "image/jpeg",
+            ".gif": "image/gif",
+            ".png": "image/png",
+            ".ico": "image/ico"
+        };
+
+        var isValidExt = validExtensions[ext];
+
+        if (isValidExt) {
+
+            localPath += filename;
+            fs.exists(localPath, function(exists) {
+                if(exists) {
+                    console.log("Serving file: " + localPath);
+                    getFile(localPath, res, ext);
+                } else {
+                    console.log("File not found: " + localPath);
+                    res.writeHead(404);
+                    res.end();
+                }
+            });
+
+        } else {
+            console.log("Invalid file extension detected: " + ext)
+        }
+
+    }).listen(portHttp, hostHttp);
+}
+
+function getFile(localPath, res, mimeType) {
+    fs.readFile(localPath, function(err, contents) {
+        if(!err) {
+            res.setHeader("Content-Length", contents.length);
+            res.setHeader("Content-Type", mimeType);
+            res.statusCode = 200;
+            res.end(contents);
+        } else {
+            res.writeHead(500);
+            res.end();
+        }
     });
 }
