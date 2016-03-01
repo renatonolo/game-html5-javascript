@@ -2,6 +2,7 @@ function Player(acc, pass){
     
     this.webscket = null;
 
+    this.uid = null;
     this.account = acc;
     this.password = pass;
     this.vocation = null;
@@ -43,6 +44,7 @@ function Player(acc, pass){
     };
 
     this.callbackLoadPlayerResponse = function(ctx, data){
+        ctx.player.uid = data.data.uid;
         ctx.player.name = data.data.name;
         ctx.player.sex = data.data.sex;
         ctx.player.level = data.data.level;
@@ -82,7 +84,18 @@ function Player(acc, pass){
             aux = player.position.y - ctx.map.position.y;
             posY += aux * config.tileH;
             
-            ctx.foreground.drawImage(player.imgPlayer, player.playerDimensions[player.direction].stopped[0].x, player.playerDimensions[player.direction].stopped[0].y, player.playerDimensions[player.direction].stopped[0].w, player.playerDimensions[player.direction].stopped[0].h, posX, posY, player.playerDimensions[player.direction].stopped[0].w, player.playerDimensions[player.direction].stopped[0].h);
+            ctx.foreground.drawImage(
+                player.imgPlayer, 
+                player.playerDimensions[player.direction].stopped[0].x, 
+                player.playerDimensions[player.direction].stopped[0].y, 
+                player.playerDimensions[player.direction].stopped[0].w, 
+                player.playerDimensions[player.direction].stopped[0].h, 
+                posX, 
+                posY, 
+                player.playerDimensions[player.direction].stopped[0].w, 
+                player.playerDimensions[player.direction].stopped[0].h
+            );
+            
         } else {
             if(player.frameAnimation % 10 == 0){
                 player.walkingAnnimation++;
@@ -141,16 +154,44 @@ function Player(acc, pass){
             aux = player.position.y - ctx.map.position.y;
             posY += aux * config.tileH + player.offsetY;
 
-            ctx.foreground.drawImage(player.imgPlayer, player.playerDimensions[player.direction].walking[player.walkingAnnimation].x, player.playerDimensions[player.direction].walking[player.walkingAnnimation].y, player.playerDimensions[player.direction].walking[player.walkingAnnimation].w, player.playerDimensions[player.direction].walking[player.walkingAnnimation].h, posX, posY, player.playerDimensions[player.direction].walking[player.walkingAnnimation].w, player.playerDimensions[player.direction].walking[player.walkingAnnimation].h);            
+            ctx.foreground.drawImage(
+                player.imgPlayer, 
+                player.playerDimensions[player.direction].walking[player.walkingAnnimation].x, 
+                player.playerDimensions[player.direction].walking[player.walkingAnnimation].y, 
+                player.playerDimensions[player.direction].walking[player.walkingAnnimation].w, 
+                player.playerDimensions[player.direction].walking[player.walkingAnnimation].h, 
+                posX, 
+                posY, 
+                player.playerDimensions[player.direction].walking[player.walkingAnnimation].w, 
+                player.playerDimensions[player.direction].walking[player.walkingAnnimation].h
+            );
 
             if(player.wayCount >= player.wayToGo.length) {
                 player.walking = false;
                 player.wayCount = 0;
+                player.sendPosition(player);
             } else {
                 player.direction = player.wayToGo[player.wayCount];
             }
         }
     };
+
+    this.drawName = function(ctx){
+        var player = ctx.player;
+        var posX = Math.round(config.screenTileW / 2) * config.tileW - config.tileW;
+        var posY = Math.round(config.screenTileH / 2) * config.tileH - (2 * config.tileH);
+
+        var aux = player.position.x - ctx.map.position.x;
+        posX += aux * config.tileW + player.offsetX + player.playerDimensions[player.direction].walking[player.walkingAnnimation].leftOffset;
+
+        aux = player.position.y - ctx.map.position.y;
+        posY += aux * config.tileH + player.offsetY;
+
+        ctx.foreground.font = "bold 11px Verdana";
+        ctx.foreground.fillStyle = "#00FF00";
+        ctx.foreground.textAlign = "center";
+        ctx.foreground.fillText(player.name, (posX + (config.tileW / 2)), (posY - 5));
+    }
 
     this.handleTileInfo = function(ctx, data){
         console.log(data);
@@ -195,24 +236,21 @@ function Player(acc, pass){
         var action = {
             action: "sendPosition",
             account: ctx.account,
-            position: ctx.position
+            uid: ctx.uid,
+            position: ctx.position,
+            walking: ctx.walking,
+            direction: ctx.direction
         };
         ctx.websocket.sendMessage(JSON.stringify(action));
     };
 
     this.updateMapPosition = function(ctxMain, posX, posY){
-        var midX = Math.round(config.screenTileW / 2);
-        var midY = Math.round(config.screenTileH / 2);
+        var limits = ctxMain.map.getVisibleLimits(ctxMain.map);
+        var mid = ctxMain.map.getMiddleMap();
 
-        var limitXMin = ctxMain.map.position.x - midX + 1;
-        var limitXMax = ctxMain.map.position.x + midX - 1;
-
-        var limitYMin = ctxMain.map.position.y - midY + 1;
-        var limitYMax = ctxMain.map.position.y + midY - 1;
-
-        if(ctxMain.player.position.x == limitXMin && ctxMain.player.direction == "west") ctxMain.map.position.x = limitXMin - midX + 1;
-        if(ctxMain.player.position.x == limitXMax && ctxMain.player.direction == "east") ctxMain.map.position.x = limitXMax + midX - 1;
-        if(ctxMain.player.position.y == limitYMin && ctxMain.player.direction == "north") ctxMain.map.position.y = limitYMin - midY + 1;
-        if(ctxMain.player.position.y == limitYMax && ctxMain.player.direction == "south") ctxMain.map.position.y = limitYMax + midY - 2;
+        if(ctxMain.player.position.x == limits.limitXMin && ctxMain.player.direction == "west") ctxMain.map.position.x = limits.limitXMin - mid.midX + 1;
+        if(ctxMain.player.position.x == limits.limitXMax && ctxMain.player.direction == "east") ctxMain.map.position.x = limits.limitXMax + mid.midX - 1;
+        if(ctxMain.player.position.y == limits.limitYMin && ctxMain.player.direction == "north") ctxMain.map.position.y = limits.limitYMin - mid.midY + 1;
+        if(ctxMain.player.position.y == limits.limitYMax && ctxMain.player.direction == "south") ctxMain.map.position.y = limits.limitYMax + mid.midY - 2;
     }
 }

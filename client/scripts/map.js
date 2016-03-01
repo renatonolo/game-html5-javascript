@@ -140,4 +140,31 @@ function Map(canvas){
             ctx.canvas.drawImage(imgToUse, clipTileX, clipTileY, config.tileW, config.tileH, posX, posY, config.tileW, config.tileH);
         //}
     };
+
+    this.getVisibleLimits = function(ctxMap){
+        var mid = ctxMap.getMiddleMap();
+
+        var limitXMin = ctxMap.position.x - mid.midX + 1;
+        var limitXMax = ctxMap.position.x + mid.midX - 1;
+
+        var limitYMin = ctxMap.position.y - mid.midY + 1;
+        var limitYMax = ctxMap.position.y + mid.midY - 1;
+
+        return {
+            limitXMin: limitXMin,
+            limitXMax: limitXMax,
+            limitYMin: limitYMin,
+            limitYMax: limitYMax
+        };
+    }
+
+    this.getMiddleMap = function(){
+        var midX = Math.round(config.screenTileW / 2);
+        var midY = Math.round(config.screenTileH / 2);
+
+        return {
+            midX: midX,
+            midY: midY
+        };
+    }
 }

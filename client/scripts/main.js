@@ -6,6 +6,8 @@ function Main(){
     this.websocket = null;
     this.mouse = null;
     this.player = null;
+    this.characters = {};
+    this.character = null;
     this.spanFps = null;
     this.frameAnimation = 1;
     this.mapLoaded = null;
@@ -27,10 +29,12 @@ function Main(){
         this.websocket = new Websocket('127.0.0.1', 9000);
         this.map = new Map(this.foreground);
         this.mouse = new Mouse(this.canvas, this.foreground);
-        this.player = new Player("123456", "123456");
+        this.player = new Player("123456789", "123456789");
+        this.character = new Character();
 
         this.map.setup();
         this.mouse.setup(this);
+        this.character.setup();
 
         this.fps = config.fps;
         this.fpsInterval = 1000 / this.fps;
@@ -48,6 +52,7 @@ function Main(){
         if(playerLoaded == true) {
             ctx.map.position.x = ctx.player.position.x;
             ctx.map.position.y = ctx.player.position.y;
+            ctx.character.loadCharacters(ctx, ctx.map.position.x, ctx.map.position.y);
             ctx.mainLoop(ctx);
         }
     };
@@ -79,6 +84,7 @@ function Main(){
             ctx.mouse.frameAnimation = this.frameAnimation;
             ctx.map.frameAnimation = this.frameAnimation;
             ctx.player.frameAnimation = this.frameAnimation;
+            ctx.character.frameAnimation = this.frameAnimation;
             ctx.map.load(ctx.websocket, ctx);
 
             if(ctx.mapLoaded != null){
@@ -86,8 +92,11 @@ function Main(){
                 ctx.map.draw(ctx.map, ctx.mapLoaded, ctx.elapsed, 1);
                 ctx.mouse.draw();
                 ctx.player.draw(ctx);
+                ctx.character.draw(ctx);
                 ctx.map.draw(ctx.map, ctx.mapLoaded, ctx.elapsed, 2);
                 ctx.player.drawStatusText(ctx, ctx.elapsed);
+                ctx.player.drawName(ctx);
+                ctx.character.drawName(ctx);
                 //ctx.map.draw(ctx.map, ctx.mapLoaded, ctx.elapsed, 3);
             }
 

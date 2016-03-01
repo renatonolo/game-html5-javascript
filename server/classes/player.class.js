@@ -3,6 +3,7 @@ function PlayerClass(){
     this.ws = null;
     this.db = null;
 
+    this.uid = "";
     this.account = 0;
     this.password = "";
     this.name = "";
@@ -40,6 +41,7 @@ function PlayerClass(){
 
         if(rows.length == 1){
             player = {
+                uid: rows[0].uid,
                 name: rows[0].name,
                 level: rows[0].level,
                 sex: rows[0].sex, //0 = female, 1 = male
@@ -72,9 +74,11 @@ function PlayerClass(){
         ctxPlayer.ws.send(JSON.stringify(response));
     };
 
-    this.updatePosition = function(account, x, y){
-        this.db.query("UPDATE players SET position_x = " + x + ", position_y = " + y + " WHERE account = " + account, null, null);
-    }
+    this.updatePosition = function(account, x, y, walking, direction){
+        if(walking) walking = 1;
+        else walking = 0;
+        this.db.query("UPDATE players SET position_x = " + x + ", position_y = " + y + ", walking = " + walking + ", direction = '" + direction + "' WHERE account = " + account, null, null);
+    };
 }
 
 module.exports = PlayerClass;

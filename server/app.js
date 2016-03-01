@@ -5,9 +5,11 @@ var WebSocket = require('ws').Server,
     MysqlConnection = require('./classes/mysql.class.js'),
     Player = require('./classes/player.class.js'),
     Map = require('./classes/map.class.js');
+    Character = require('./classes/character.class.js');
 
 var mysqlClass = null,
     player = null,
+    character = null,
     mapJson = null,
     tilesets = null;
 
@@ -29,12 +31,22 @@ wss.on('connection', function connection(ws) {
                     map.checkTileInfo(ws, data.account, data.x, data.y);
                     break;
                 case "sendPosition":
-                    player.updatePosition(data.account, data.position.x, data.position.y);
+                    player.updatePosition(data.account, data.position.x, data.position.y, data.walking, data.direction);
+                    character.refreshCharacter(data.uid);
+                    break;
+                case "loadCharacters":
+                    character.loadCharacters(ws, data.x, data.y);
+                    break;
             }
         }
     });
-
 });
+
+wss.broadcast = function broadcast(data) {
+    wss.clients.forEach(function each(client) {
+        client.send(data);
+    });
+};
 
 function setupServer(){
 
@@ -44,6 +56,9 @@ function setupServer(){
 
     player = new Player();
     player.setup(mysqlConn);
+
+    character = new Character();
+    character.setup(mysqlConn, wss);
 
     map = new Map();
 

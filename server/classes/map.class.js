@@ -154,10 +154,7 @@ function MapClass(){
                 collision: collision.collision,
                 x: x,
                 y: y,
-                //way: ["east", "east", "east", "east", "east", "east", "east", "east", "east", "east", "east", "east", "east"]
                 way: way
-                //way: ["north", "north", "north", "north", "north", "north", "north", "north"]
-                //way: ["south", "south", "south", "south", "south", "south", "south", "south"]
             };
 
             var response = {

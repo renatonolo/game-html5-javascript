@@ -14,6 +14,12 @@ function Websocket(host, port){
     this.callbackCheckTileInfoResponse = null;
     this.ctxCheckTileInfoResponse = null;
 
+    this.callbackLoadCharactersResponse = null;
+    this.ctxLoadCharactersResponse = null;
+
+    this.callbackRefreshCharacter = null;
+    this.ctxRefreshCharacter = null;
+
     this.connect = function(ctx, callback){
         var self = this;
         var url = 'ws://' + this.host + ':' + this.port + '/';
@@ -41,6 +47,11 @@ function Websocket(host, port){
                 case "checkTileInfoResponse":
                     this.callbackCheckTileInfoResponse(this.ctxCheckTileInfoResponse, data);
                     break;
+                case "loadCharactersResponse":
+                    this.callbackRefreshCharacter(this.ctxRefreshCharacter, data);
+                    break;
+                case "refreshCharacterResponse":
+                    this.callbackRefreshCharacter(this.ctxRefreshCharacter, data);
             }
         }
     };
