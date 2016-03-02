@@ -1,68 +1,40 @@
-var WebSocket = require('ws').Server,
-    wss = new WebSocket({
-        host: process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1',
-        port: process.env.OPENSHIFT_NODEJS_PORT || 8080}),
-    fs = require('fs'),
-    http = require('http'),
-    path = require('path'),
-    mysql = require('mysql'),
-    MysqlConnection = require('./classes/mysql.class.js'),
-    Player = require('./classes/player.class.js'),
-    Map = require('./classes/map.class.js');
-    Character = require('./classes/character.class.js');
+var ipaddress = process.env.OPENSHIFT_NODEJS_IP || "127.0.0.1";
+var port = process.env.OPENSHIFT_NODEJS_PORT || 8080;
 
-var hostHttp = process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1',
-    portHttp = process.env.OPENSHIFT_NODEJS_PORT || 8000,
-    clients = [],
-    mysqlClass = null,
-    player = null,
-    character = null,
-    mapJson = null,
-    tilesets = null;
+var WebSocket = require('ws').Server;
+    
+var fs = require('fs');
+var http = require('http');
+var path = require('path');
+var server = null;
+var mysql = require('mysql');
+
+var MysqlConnection = require('./classes/mysql.class.js');
+var Player = require('./classes/player.class.js');
+var Map = require('./classes/map.class.js');
+var Character = require('./classes/character.class.js');
+
+var clients = [];
+var mysqlClass = null;
+var player = null;
+var character = null;
+var mapJson = null;
+var tilesets = null;
 
 setupServer();
 
-wss.on('connection', function connection(ws) {
-    clients.push(ws);
 
-    ws.on('message', function incoming(message) {
-        //console.log(ws);
-
-        var data = JSON.parse(message);
-        if(typeof data === "object" && data.action != undefined){
-            switch(data.action){
-                case "loadMap":
-                    map.loadMap(ws, data.x, data.y);
-                    break;
-                case "loadPlayer":
-                    player.loadPlayer(ws, data.account, data.password);
-                    break;
-                case "checkTileInfo":
-                    map.checkTileInfo(ws, data.account, data.x, data.y);
-                    break;
-                case "sendPosition":
-                    player.updatePosition(data.account, data.position.x, data.position.y, data.walking, data.direction);
-                    character.refreshCharacter(data.uid);
-                    break;
-                case "loadCharacters":
-                    character.loadCharacters(ws, data.x, data.y);
-                    break;
-            }
-        }
-    });
-});
-
-wss.broadcast = function broadcast(data) {
-    wss.clients.forEach(function each(client) {
-        client.send(data);
-    });
-};
-
+/**
+ * Setup Server
+ */
 function setupServer(){
 
     //
     //SERVER SIDE
     //
+    startHttpServer();
+    startWebsocketServer();
+    
     var mysqlConn = new MysqlConnection();
     mysqlConn.mysql = mysql;
     var host = process.env.OPENSHIFT_MYSQL_DB_HOST || "127.0.0.1";
@@ -87,15 +59,10 @@ function setupServer(){
         mapJson = JSON.parse(json.toString());
         map.setup(mapJson, mysqlConn);
     });
-
-    //
-    //CLIENT SIDE
-    //
-    startHttpServer();
 }
 
 function startHttpServer(){
-    http.createServer( function(req, res) {
+    server = http.createServer( function(req, res) {
 
         var now = new Date();
 
@@ -136,8 +103,11 @@ function startHttpServer(){
         } else {
             console.log("Invalid file extension detected: " + ext)
         }
+    });
 
-    }).listen(portHttp, hostHttp);
+    server.listen(port, ipaddress, function(){
+        console.log((new Date()) + " Server started: " + ipaddress + ":" + port);
+    });
 }
 
 function getFile(localPath, res, mimeType) {
@@ -152,4 +122,47 @@ function getFile(localPath, res, mimeType) {
             res.end();
         }
     });
+}
+
+function startWebsocketServer(){
+    wss = new WebSocket({
+        server: server,
+        autoAcceptConnections: false
+    });
+
+    wss.on('connection', function connection(ws) {
+        clients.push(ws);
+
+        ws.on('message', function incoming(message) {
+            //console.log(ws);
+
+            var data = JSON.parse(message);
+            if(typeof data === "object" && data.action != undefined){
+                switch(data.action){
+                    case "loadMap":
+                        map.loadMap(ws, data.x, data.y);
+                        break;
+                    case "loadPlayer":
+                        player.loadPlayer(ws, data.account, data.password);
+                        break;
+                    case "checkTileInfo":
+                        map.checkTileInfo(ws, data.account, data.x, data.y);
+                        break;
+                    case "sendPosition":
+                        player.updatePosition(data.account, data.position.x, data.position.y, data.walking, data.direction);
+                        character.refreshCharacter(data.uid);
+                        break;
+                    case "loadCharacters":
+                        character.loadCharacters(ws, data.x, data.y);
+                        break;
+                }
+            }
+        });
+    });
+
+    wss.broadcast = function broadcast(data) {
+        wss.clients.forEach(function each(client) {
+            client.send(data);
+        });
+    };
 }
