@@ -2,7 +2,7 @@ var config = {
     //hostWS: "gamehtml5-rnlprojects.rhcloud.com",
     //portWS: 8080,
     hostWS: "127.0.0.1",
-    portWS: 8080,
+    portWS: 8000,
     screenTileW: 25, //25
     screenTileH: 15, //15
     tileW: 32,

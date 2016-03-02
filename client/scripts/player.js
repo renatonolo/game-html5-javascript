@@ -1,10 +1,10 @@
-function Player(acc, pass){
+function Player(provider, socialID){
     
     this.webscket = null;
 
     this.uid = null;
-    this.account = acc;
-    this.password = pass;
+    this.provider = provider;
+    this.socialID = socialID;
     this.vocation = null;
     this.level = null;
     this.skills = {};
@@ -35,8 +35,8 @@ function Player(acc, pass){
         this.websocket = ctx.websocket;
         var action = {
             action: "loadPlayer",
-            account: this.account,
-            password: this.password
+            socialID: this.socialID,
+            provider: this.provider
         };
         this.websocket.callbackLoadPlayerResponse = this.callbackLoadPlayerResponse;
         this.websocket.ctxLoadPlayerResponse = ctx;

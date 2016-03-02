@@ -29,9 +29,15 @@ function PlayerClass(){
         this.db = db;
     };
 
-    this.loadPlayer = function(ws, account, password){
+    this.loadPlayer = function(ws, provider, socialID){
         this.ws = ws;
-        this.db.query("SELECT * FROM players WHERE account = " + account, this, this.loadPlayerCallback);
+        var sql = "";
+        
+        if(provider == "facebook"){
+            sql = "SELECT * FROM players WHERE facebookID = " + socialID;
+        }
+        
+        this.db.query(sql, this, this.loadPlayerCallback);
     };
 
     this.loadPlayerCallback = function(ctxPlayer, rows){

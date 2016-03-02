@@ -1,5 +1,7 @@
 function Main(){
 
+    this.provider = "";
+    this.socialID = "";
     this.canvas = null;
     this.foreground = null;
     this.map = null;
@@ -21,7 +23,11 @@ function Main(){
         stop,
         frameCount;
 
-    this.main = function(){
+    this.main = function(provider, socialID){
+        this.provider = provider;
+        this.socialID = socialID;
+        console.log(provider);
+        console.log(socialID);
         this.canvas = document.getElementById("foreground");
         this.foreground = this.canvas.getContext('2d');
         this.spanFps = document.getElementById("fps");
@@ -29,7 +35,7 @@ function Main(){
         this.websocket = new Websocket(config.hostWS, config.portWS);
         this.map = new Map(this.foreground);
         this.mouse = new Mouse(this.canvas, this.foreground);
-        this.player = new Player("123456", "123456");
+        this.player = new Player(this.provider, this.socialID);
         this.character = new Character();
 
         this.map.setup();
@@ -91,12 +97,12 @@ function Main(){
                 ctx.map.draw(ctx.map, ctx.mapLoaded, ctx.elapsed, 0);
                 ctx.map.draw(ctx.map, ctx.mapLoaded, ctx.elapsed, 1);
                 ctx.mouse.draw();
-                ctx.player.draw(ctx);
                 ctx.character.draw(ctx);
+                ctx.player.draw(ctx);
                 ctx.map.draw(ctx.map, ctx.mapLoaded, ctx.elapsed, 2);
-                ctx.player.drawStatusText(ctx, ctx.elapsed);
-                ctx.player.drawName(ctx);
                 ctx.character.drawName(ctx);
+                ctx.player.drawName(ctx);
+                ctx.player.drawStatusText(ctx, ctx.elapsed);
                 //ctx.map.draw(ctx.map, ctx.mapLoaded, ctx.elapsed, 3);
             }
 
