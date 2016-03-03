@@ -129,6 +129,7 @@ function MapClass(){
 
     this.checkTileInfo = function(ws, uid, x, y){
         this.ws = ws;
+        console.log(uid);
         this.db.query("SELECT * FROM players WHERE uid = " + uid, this, this.checkTileInfoCallback, [x, y]);
     };
 
