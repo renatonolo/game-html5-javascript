@@ -107,7 +107,7 @@ function startWebsocketServer(){
                         player.loadPlayer(ws, data.provider, data.socialID);
                         break;
                     case "checkTileInfo":
-                        map.checkTileInfo(ws, data.account, data.x, data.y);
+                        map.checkTileInfo(ws, data.uid, data.x, data.y);
                         break;
                     case "sendPosition":
                         player.updatePosition(data.account, data.position.x, data.position.y, data.walking, data.direction);

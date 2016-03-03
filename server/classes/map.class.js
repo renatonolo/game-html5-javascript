@@ -127,9 +127,9 @@ function MapClass(){
         return dataTiles;
     };
 
-    this.checkTileInfo = function(ws, account, x, y){
+    this.checkTileInfo = function(ws, uid, x, y){
         this.ws = ws;
-        this.db.query("SELECT * FROM players WHERE account = " + account, this, this.checkTileInfoCallback, [x, y]);
+        this.db.query("SELECT * FROM players WHERE uid = " + uid, this, this.checkTileInfoCallback, [x, y]);
     };
 
     this.checkTileInfoCallback = function(ctxMap, rows, args){
