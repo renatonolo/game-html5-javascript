@@ -110,7 +110,7 @@ function startWebsocketServer(){
                         map.checkTileInfo(ws, data.uid, data.x, data.y);
                         break;
                     case "sendPosition":
-                        player.updatePosition(data.account, data.position.x, data.position.y, data.walking, data.direction);
+                        player.updatePosition(data.uid, data.position.x, data.position.y, data.walking, data.direction);
                         character.refreshCharacter(data.uid);
                         break;
                     case "loadCharacters":

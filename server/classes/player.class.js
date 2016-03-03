@@ -81,10 +81,10 @@ function PlayerClass(){
         ctxPlayer.ws.send(JSON.stringify(response));
     };
 
-    this.updatePosition = function(account, x, y, walking, direction){
+    this.updatePosition = function(uid, x, y, walking, direction){
         if(walking) walking = 1;
         else walking = 0;
-        this.db.query("UPDATE players SET position_x = " + x + ", position_y = " + y + ", walking = " + walking + ", direction = '" + direction + "' WHERE account = " + account, null, null);
+        this.db.query("UPDATE players SET position_x = " + x + ", position_y = " + y + ", walking = " + walking + ", direction = '" + direction + "' WHERE uid = '" + uid + "'", null, null);
     };
 }
 

@@ -235,7 +235,6 @@ function Player(provider, socialID){
     this.sendPosition = function(ctx){
         var action = {
             action: "sendPosition",
-            account: ctx.account,
             uid: ctx.uid,
             position: ctx.position,
             walking: ctx.walking,
