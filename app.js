@@ -1,20 +1,19 @@
-var ipaddress = process.env.OPENSHIFT_NODEJS_IP || "127.0.0.1";
-var port = process.env.OPENSHIFT_NODEJS_PORT || 8000;
+var Facebook = require('facebook-node-sdk');
 
 var express = require('express');
 var expressSession = require('express-session');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var morgan = require('morgan');
 
 var WebSocket = require('ws').Server;
 var fs = require('fs');
 var http = require('http');
 var path = require('path');
 var mysql = require('mysql');
-var passport = require('passport');
-var FacebookStrategy = require('passport-facebook').Strategy;
-var connectEnsureLogin = require('connect-ensure-login');
-var configAuth = require('./server/config/auth.js');
+
+var configs = require('./server/configs.js');
+var gameRoute = require('./server/routes/game.js');
 
 var server = null;
 var app = null;
@@ -24,6 +23,7 @@ var Player = require('./server/classes/player.class.js');
 var Map = require('./server/classes/map.class.js');
 var Character = require('./server/classes/character.class.js');
 
+var accessToken = null;
 var clients = [];
 var mysqlClass = null;
 var player = null;
@@ -42,7 +42,6 @@ function setupServer(){
     //
     //SERVER SIDE
     //
-    configPassport();
     configExpress();
 
     startHttpServer();
@@ -50,15 +49,7 @@ function setupServer(){
     
     var mysqlConn = new MysqlConnection();
     mysqlConn.mysql = mysql;
-    var host = process.env.OPENSHIFT_MYSQL_DB_HOST || "127.0.0.1";
-    var port = process.env.OPENSHIFT_MYSQL_DB_PORT || "3306";
-    var username = "root";
-    var password = "159357";
-    var database = "gameHTML5";
-    //var username = "admin1Dc4G2u";
-    //var password = "HVXQEb8Dv_F8";
-    //var database = "gamehtml5";
-    mysqlConn.connect(host, port, username, password, database);
+    mysqlConn.connect(configs.mysql.host, configs.mysql.port, configs.mysql.username, configs.mysql.password, configs.mysql.database);
 
     player = new Player();
     player.setup(mysqlConn);
@@ -68,7 +59,7 @@ function setupServer(){
 
     map = new Map();
 
-    fs.readFile(__dirname + '/server/maps/map.json', function(err, json){
+    fs.readFile(configs.server.mapsPath, function(err, json){
         mapJson = JSON.parse(json.toString());
         map.setup(mapJson, mysqlConn);
     });
@@ -80,8 +71,8 @@ function startHttpServer(){
      */
     server = http.createServer(app);
 
-    server.listen(port, ipaddress, function(){
-        console.log((new Date()) + " Server started: " + ipaddress + ":" + port);
+    server.listen(configs.server.port, configs.server.ipaddress, function(){
+        console.log((new Date()) + " Server started: " + configs.server.ipaddress + ":" + configs.server.port);
     });
 }
 
@@ -128,28 +119,14 @@ function startWebsocketServer(){
     };
 }
 
-function configPassport(){
-    passport.use(new FacebookStrategy({
-        clientID: configAuth.facebookAuth.clientID,
-        clientSecret: configAuth.facebookAuth.clientSecret,
-        callbackURL: configAuth.facebookAuth.callbackURL
-    },
-    function(accessToken, refreshToken, profile, cb) {
-        // In this example, the user's Facebook profile is supplied as the user
-        // record.  In a production-quality application, the Facebook profile should
-        // be associated with a user record in the application's database, which
-        // allows for account linking and authentication with other identity
-        // providers.
-        return cb(null, profile);
-    }));
-
-    passport.serializeUser(function(user, cb) {
-        cb(null, user);
+function configFacebook(req){
+    facebook.options({
+        appId: configs.facebookAuth.clientID,
+        appSecret: configs.facebookAuth.clientSecret,
+        redirectUri: configs.facebookAuth.callbackURL
     });
 
-    passport.deserializeUser(function(obj, cb) {
-        cb(null, obj);
-    });
+    return req.session.access_token;
 }
 
 function configExpress(){
@@ -159,13 +136,12 @@ function configExpress(){
     app.set('views', __dirname + '/client');
     app.set('view engine', 'ejs');
 
+    app.use(morgan('dev'));
     app.use(cookieParser());
     app.use(bodyParser.urlencoded({ extended: true }));
-    app.use(expressSession({ secret: 'keyboard cat', resave: true, saveUninitialized: true }));
+    app.use(expressSession({ secret: 'keyboard cat'}));
+    app.use(Facebook.middleware({ appId: configs.facebookAuth.clientID, secret: configs.facebookAuth.clientSecret }));
     
-    app.use(passport.initialize());
-    app.use(passport.session());
-
     //app.use(express.compress());
     app.use(express.static(__dirname + '/client'));
 
@@ -173,29 +149,11 @@ function configExpress(){
 }
 
 function configRoutes(){
-    app.get("/", function(req, res){
-        res.redirect("/login")
-    });
-
-    app.get("/game", function(req, res){
-        res.render("index", {user: req.user});
-    });
-
-    app.get('/login', function(req, res){
+    app.get("/",  function(req, res){
         res.render('login');
     });
 
-    app.get('/auth/facebook', passport.authenticate('facebook'));
+    app.get("/login", Facebook.loginRequired({scope: 'email'}), gameRoute.login);
 
-    app.get('/auth/facebook/callback', passport.authenticate('facebook', { failureRedirect: '/login' }),
-        function(req, res) {
-            res.redirect('/game');
-        }
-    );
-
-    app.get('/profile', connectEnsureLogin.ensureLoggedIn(),
-        function(req, res){
-            res.render('profile', { user: req.user });
-        }
-    );
+    app.get("/game", gameRoute.start);
 }

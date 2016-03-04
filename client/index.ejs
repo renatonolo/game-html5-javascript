@@ -20,7 +20,7 @@
     <body onload="new Main().main('<%= user.provider %>', '<%= user.id %>');">
         <p style="font-family: Arial; font-size: 11px;">
             Social type: <%= user.provider %><br/>
-            Name: <%= user.displayName %><br/>
+            Name: <%= user.name %><br/>
             <% if (user.emails) { %>
             Email: <%= user.emails[0].value %><br/>
             <% } %>
