@@ -5,6 +5,7 @@ var expressSession = require('express-session');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var morgan = require('morgan');
+var uuid = require('node-uuid');
 
 var WebSocket = require('ws').Server;
 var fs = require('fs');
@@ -22,10 +23,12 @@ var MysqlConnection = require('./server/classes/mysql.class.js');
 var Player = require('./server/classes/player.class.js');
 var Map = require('./server/classes/map.class.js');
 var Character = require('./server/classes/character.class.js');
+var Account = require('./server/classes/account.class.js');
 
 var accessToken = null;
 var clients = [];
 var mysqlClass = null;
+var account = null;
 var player = null;
 var character = null;
 var mapJson = null;
@@ -39,25 +42,26 @@ setupServer();
  */
 function setupServer(){
 
-    //
-    //SERVER SIDE
-    //
     configExpress();
-
     startHttpServer();
     startWebsocketServer();
-    
+
     var mysqlConn = new MysqlConnection();
     mysqlConn.mysql = mysql;
     mysqlConn.connect(configs.mysql.host, configs.mysql.port, configs.mysql.username, configs.mysql.password, configs.mysql.database);
 
     player = new Player();
-    player.setup(mysqlConn);
+    player.setup(mysqlConn, uuid);
+
+    account = new Account();
+    account.setup(mysqlConn, uuid);
 
     character = new Character();
     character.setup(mysqlConn, wss);
 
     map = new Map();
+
+    configRoutes();
 
     fs.readFile(configs.server.mapsPath, function(err, json){
         mapJson = JSON.parse(json.toString());
@@ -95,7 +99,7 @@ function startWebsocketServer(){
                         map.loadMap(ws, data.x, data.y);
                         break;
                     case "loadPlayer":
-                        player.loadPlayer(ws, data.provider, data.socialID);
+                        player.loadPlayer(ws, data.player);
                         break;
                     case "checkTileInfo":
                         map.checkTileInfo(ws, data.uid, data.x, data.y);
@@ -144,8 +148,6 @@ function configExpress(){
     
     //app.use(express.compress());
     app.use(express.static(__dirname + '/client'));
-
-    configRoutes();
 }
 
 function configRoutes(){
@@ -153,7 +155,40 @@ function configRoutes(){
         res.render('login');
     });
 
+    app.get("/status/:status",  function(req, res){
+        res.render('login', {status: req.params.status});
+    });
+
     app.get("/login", Facebook.loginRequired({scope: 'email'}), gameRoute.login);
 
-    app.get("/game", gameRoute.start);
+    app.get("/game", function(req, res){
+        gameRoute.game(account, req, res);
+    });
+
+    app.get("/start/:accountUid", 
+        function(req, res, next){
+            return player.getByAccount(req, res, next);
+        },
+        function(req, res, next){
+            return gameRoute.renderStart(req, res);
+        }
+    );
+
+    app.get("/create/:facebookID", gameRoute.create);
+
+    app.post("/create", 
+        function(req, res, next){
+            return account.get(req, res, next);
+        }, 
+        function(req, res, next){
+            return account.insert(req, res, next);
+        }, 
+        function(req, res, next){
+            return player.insert(req, res, next);
+        }, 
+        function(req, res, next){
+            return player.associateWithAccount(req, res, next);
+        }, function(req, res, next){
+            return gameRoute.renderCreate(req, res, next);
+        });
 }

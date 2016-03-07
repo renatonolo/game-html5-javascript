@@ -2,10 +2,11 @@ function PlayerClass(){
 
     this.ws = null;
     this.db = null;
+    this.uuid = null;
 
     this.uid = "";
-    this.account = 0;
-    this.password = "";
+    this.accountUid = "";
+    this.facebookID = 0;
     this.name = "";
     this.level = 1;
     this.sex = 1;
@@ -25,18 +26,93 @@ function PlayerClass(){
     this.position.x = 51;
     this.position.y = 49;
 
-    this.setup = function(db){
+    this.setup = function(db, uuid){
         this.db = db;
+        this.uuid = uuid;
     };
 
-    this.loadPlayer = function(ws, provider, socialID){
-        this.ws = ws;
-        var sql = "";
-        
-        if(provider == "facebook"){
-            sql = "SELECT * FROM players WHERE facebookID = " + socialID;
+    this.insert = function(req, res, next){
+        console.log("Player.insert");
+        if(req.account.status == 0){
+            this.uid = this.uuid.v4();
+            this.name = req.body.name || "";
+            
+            var sql = "INSERT INTO players (uid, name) VALUES ('" + this.uid + "', '" + this.name + "')";
+            this.db.query(sql, this, function(ctx, rows){
+                if(rows.affectedRows == 1){
+                    req.player = {
+                        status: 0,
+                        player: {
+                            uid: ctx.uid,
+                            name: ctx.name
+                        }
+                    };
+                } else {
+                    req.player = {
+                        status: 1,
+                        player: {
+                            uid: ctx.uid,
+                            name: ctx.name
+                        }
+                    };
+                }
+                return next();
+            });
+        } else {
+            return next();
         }
-        
+    };
+
+    this.associateWithAccount = function(req, res, next){
+        console.log("Player.associateWithAccount");
+        if(req.account && req.account.status == 0 && req.player && req.player.status == 0){
+            this.accountUid = req.account.account.uid;
+            this.uid = req.player.player.uid;
+            
+            var sql = "INSERT INTO account_players (account, player) VALUES ('" + this.accountUid + "', '" + this.uid + "')";
+            this.db.query(sql, this, function(ctx, rows){
+                if(rows.affectedRows == 1){
+                    req.account_players = {
+                        status: 0,
+                        account_players: {
+                            account: ctx.accountUid,
+                            player: ctx.uid
+                        }
+                    };
+                } else {
+                    req.account_players = {
+                        status: 1,
+                        account_players: {
+                            account: ctx.accountUid,
+                            player: ctx.uid
+                        }
+                    };
+                }
+                return next();
+            });
+        } else {
+            return next();
+        }
+    };
+
+    this.getByAccount = function(req, res, next){
+        this.accountUid = req.params.accountUid || "";
+
+        var sql = "SELECT p.* FROM players AS p INNER JOIN account_players AS ap ON p.uid = ap.player WHERE ap.account = '" + this.accountUid + "'";
+        this.db.query(sql, this, function(ctx, rows){
+            if(rows.length > 0){
+                req.players = rows;
+                return next();
+            } else {
+                return res.redirect('/status/3');
+            }
+        });
+    }
+
+    this.loadPlayer = function(ws, playerUid){
+        this.ws = ws;
+
+        var sql = "SELECT * FROM players WHERE uid = '" + playerUid + "'";
         this.db.query(sql, this, this.loadPlayerCallback);
     };
 

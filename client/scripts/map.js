@@ -33,7 +33,7 @@ function Map(canvas){
                 for(var i = 0; i < data.data.tilesets.length; i++){
                     ctx.imgTile[i] = {};
                     ctx.imgTile[i].image = new Image();
-                    ctx.imgTile[i].image.src = "imgs/" + data.data.tilesets[i].imgTile;
+                    ctx.imgTile[i].image.src = "/imgs/" + data.data.tilesets[i].imgTile;
                     ctx.imgTile[i].firstgid = data.data.tilesets[i].firstgid;
                 }
             };

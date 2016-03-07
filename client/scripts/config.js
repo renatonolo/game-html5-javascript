@@ -10,9 +10,9 @@ var config = {
     numTilePerLine: 8,
     statusTextTime: 5000,
 
-    tilesheetPath: "imgs/tilesheet1.png",
-    targetPath: "imgs/target.png",
-    imgBeginnerPath: "imgs/beginner.png",
+    tilesheetPath: "/imgs/tilesheet1.png",
+    targetPath: "/imgs/target.png",
+    imgBeginnerPath: "/imgs/beginner.png",
 
     fps: 60
 };

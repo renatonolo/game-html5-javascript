@@ -6,6 +6,11 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no">
         <title>Game HTML5</title>
 
+        <link rel="stylesheet" href="/css/bootstrap.min.css"/>
+        <link rel="stylesheet" href="/css/bootstrap-theme.min.css"/>
+        <script type="text/javascript" src="/scripts/jquery-2.2.1.min.js"></script>
+        <script type="text/javascript" src="/scripts/bootstrap.min.js"></script>
+
         <script type="text/javascript" src="/scripts/config.js"></script>
         <script type="text/javascript" src="/scripts/main.js"></script>
         <script type="text/javascript" src="/scripts/websocket.js"></script>
@@ -17,14 +22,39 @@
 
     </head>
 
-    <body onload="new Main().main('<%= user.provider %>', '<%= user.id %>');">
-        <p style="font-family: Arial; font-size: 11px;">
-            Social type: <%= user.provider %><br/>
-            Name: <%= user.name %><br/>
-            <% if (user.emails) { %>
-            Email: <%= user.emails[0].value %><br/>
-            <% } %>
-        </p>
+    <script type="text/javascript">
+        $(document).ready(function(){
+            $('#myModal').modal('show');
+        });
+    </script>
+
+    <body>
+        <% if(locals.players) { %>
+            <!-- Modal -->
+        <div id="myModal" class="modal fade" role="dialog">
+            <div class="modal-dialog">
+
+                <!-- Modal content-->
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title">Select one character.</h4>
+                    </div>
+                    <div class="modal-body">
+                        <select id="selectPlayer" class="form-control">
+                            <% for(var i = 0; i < players.length; i++){ %>
+                                <option value="<%= players[i].uid %>"><%= players[i].name %></option>
+                            <% } %>
+                        </select>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" onclick="selectPlayer($('#selectPlayer').val());">Select</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <% } %>
 
         <div id="main" style="margin-top: 10px; border:1px solid #0F0; margin-left:auto; margin-right:auto; display:table;">
             <header style="border:1px solid red;">TESTE</header>

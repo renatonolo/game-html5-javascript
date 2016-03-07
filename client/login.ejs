@@ -18,12 +18,15 @@
     </head>
 
     <body>
-        <div style="width: 100%; margin-top: 20px;">
-            <div style="width: 200px; margin-left: auto; margin-right: auto;">
-                <a class="btn btn-block btn-social btn-facebook" href="/login">
-                    <span class="fa fa-facebook"></span> Sign in with Facebook
-                </a>
-            </div>
+        <div style="width: 600px; margin: 20px auto;">
+            <% if(locals.status && locals.status == 1) { %>
+                <div class="alert alert-danger" role="alert">Error to create account. Try again.</div>
+            <% } else if(locals.status && locals.status == 0) { %>
+                <div class="alert alert-success" role="alert">Account created. Log in it.</div>
+            <% } %>
+            <a style="width: 200px; margin: 0 auto;" class="btn btn-block btn-social btn-facebook" href="/login">
+                <span class="fa fa-facebook"></span> Sign in with Facebook
+            </a>
         </div>
     </body>
 </html>

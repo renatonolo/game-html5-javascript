@@ -1,7 +1,11 @@
+function selectPlayer(player){
+    $('#myModal').modal('hide');
+    new Main().main(player);
+}
+
 function Main(){
 
-    this.provider = "";
-    this.socialID = "";
+    this.playerUid = "";
     this.canvas = null;
     this.foreground = null;
     this.map = null;
@@ -23,11 +27,9 @@ function Main(){
         stop,
         frameCount;
 
-    this.main = function(provider, socialID){
-        this.provider = provider;
-        this.socialID = socialID;
-        console.log(provider);
-        console.log(socialID);
+    this.main = function(playerUid){
+        this.playerUid = playerUid;
+        console.log(playerUid);
         this.canvas = document.getElementById("foreground");
         this.foreground = this.canvas.getContext('2d');
         this.spanFps = document.getElementById("fps");
@@ -35,7 +37,7 @@ function Main(){
         this.websocket = new Websocket(config.hostWS, config.portWS);
         this.map = new Map(this.foreground);
         this.mouse = new Mouse(this.canvas, this.foreground);
-        this.player = new Player(this.provider, this.socialID);
+        this.player = new Player(this.playerUid);
         this.character = new Character();
 
         this.map.setup();
