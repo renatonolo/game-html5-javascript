@@ -24,6 +24,7 @@ var Player = require('./server/classes/player.class.js');
 var Map = require('./server/classes/map.class.js');
 var Character = require('./server/classes/character.class.js');
 var Account = require('./server/classes/account.class.js');
+var Chat = require('./server/classes/chat.class.js');
 
 var accessToken = null;
 var clients = [];
@@ -31,6 +32,8 @@ var mysqlClass = null;
 var account = null;
 var player = null;
 var character = null;
+var chat = null;
+
 var mapJson = null;
 var tilesets = null;
 
@@ -42,153 +45,181 @@ setupServer();
  */
 function setupServer(){
 
-    configExpress();
-    startHttpServer();
-    startWebsocketServer();
+	configExpress();
+	startHttpServer();
+	startWebsocketServer();
 
-    var mysqlConn = new MysqlConnection();
-    mysqlConn.mysql = mysql;
-    mysqlConn.connect(configs.mysql.host, configs.mysql.port, configs.mysql.username, configs.mysql.password, configs.mysql.database);
+	var mysqlConn = new MysqlConnection();
+	mysqlConn.mysql = mysql;
+	mysqlConn.connect(configs.mysql.host, configs.mysql.port, configs.mysql.username, configs.mysql.password, configs.mysql.database);
 
-    player = new Player();
-    player.setup(mysqlConn, uuid);
+	player = new Player();
+	player.setup(mysqlConn, uuid);
 
-    account = new Account();
-    account.setup(mysqlConn, uuid);
+	account = new Account();
+	account.setup(mysqlConn, uuid);
 
-    character = new Character();
-    character.setup(mysqlConn, wss);
+	character = new Character();
+	character.setup(mysqlConn, wss);
 
-    map = new Map();
+	chat = new Chat();
+	chat.setup(mysqlConn, wss, configs.server.tilesBeforeX, configs.server.tilesBeforeY, configs.server.tilesAfterX, configs.server.tilesAfterY);
 
-    configRoutes();
+	map = new Map();
 
-    fs.readFile(configs.server.mapsPath, function(err, json){
-        mapJson = JSON.parse(json.toString());
-        map.setup(mapJson, mysqlConn);
-    });
+	configRoutes();
+
+	fs.readFile(configs.server.mapsPath, function(err, json){
+		mapJson = JSON.parse(json.toString());
+		map.setup(mapJson, mysqlConn, configs.server.tilesBeforeX, configs.server.tilesBeforeY, configs.server.tilesAfterX, configs.server.tilesAfterY);
+	});
 }
 
 function startHttpServer(){
-    /**
-     * Config http server
-     */
-    server = http.createServer(app);
+	/**
+	 * Config http server
+	 */
+	server = http.createServer(app);
 
-    server.listen(configs.server.port, configs.server.ipaddress, function(){
-        console.log((new Date()) + " Server started: " + configs.server.ipaddress + ":" + configs.server.port);
-    });
+	server.listen(configs.server.port, configs.server.ipaddress, function(){
+		console.log((new Date()) + " Server started: " + configs.server.ipaddress + ":" + configs.server.port);
+	});
 }
 
 function startWebsocketServer(){
-    wss = new WebSocket({
-        server: server,
-        autoAcceptConnections: false
-    });
+	wss = new WebSocket({
+		server: server,
+		autoAcceptConnections: false
+	});
 
-    wss.on('connection', function connection(ws) {
-        clients.push(ws);
+	wss.on('connection', function connection(ws) {
+		clients.push(ws);
 
-        ws.on('message', function incoming(message) {
-            //console.log(ws);
+		ws.on('message', function incoming(message) {
+			//console.log(ws);
 
-            var data = JSON.parse(message);
-            if(typeof data === "object" && data.action != undefined){
-                switch(data.action){
-                    case "loadMap":
-                        map.loadMap(ws, data.x, data.y);
-                        break;
-                    case "loadPlayer":
-                        player.loadPlayer(ws, data.player);
-                        break;
-                    case "checkTileInfo":
-                        map.checkTileInfo(ws, data.uid, data.x, data.y);
-                        break;
-                    case "sendPosition":
-                        player.updatePosition(data.uid, data.position.x, data.position.y, data.walking, data.direction);
-                        character.refreshCharacter(data.uid);
-                        break;
-                    case "loadCharacters":
-                        character.loadCharacters(ws, data.x, data.y);
-                        break;
-                }
-            }
-        });
-    });
+			var data = JSON.parse(message);
+			if(typeof data === "object" && data.action != undefined){
+				switch(data.action){
+					case "loadMap":
+						map.loadMap(ws, data.x, data.y);
+						break;
+					case "loadPlayer":
+						player.loadPlayer(ws, data.player);
+						break;
+					case "checkTileInfo":
+						map.checkTileInfo(ws, data.uid, data.x, data.y);
+						break;
+					case "sendPosition":
+						player.updatePosition(data.uid, data.position.x, data.position.y, data.walking, data.direction);
+						character.refreshCharacter(data.uid);
+						break;
+					case "loadCharacters":
+						character.loadCharacters(ws, data.x, data.y);
+						break;
+					case "sendChatMessage":
+						chat.sendChatMessage(data.uid, data.x, data.y, data.message);
+						break;
+				}
+			}
+		});
 
-    wss.broadcast = function broadcast(data) {
-        wss.clients.forEach(function each(client) {
-            client.send(data);
-        });
-    };
+		ws.on('close', function(){
+			for(var i = 0; i < clients.length; i++){
+				if(clients[i].uidPlayer == ws.uidPlayer){
+					console.log(ws.uidPlayer);
+					clients.splice(i, 1);
+				}
+			}
+			player.logoff(ws.uidPlayer);
+		})
+	});
+
+	wss.broadcast = function broadcast(data) {
+		wss.clients.forEach(function each(client) {
+			client.send(data);
+		});
+	};
+
+	wss.sendToClients = function sendToClients(to, data){
+		if(Array.isArray(to)){
+			for(var i = 0; i < to.length; i++){
+				for(var j = 0; j < clients.length; j++){
+					if(to[i] == clients[j].uidPlayer){
+						clients[j].send(data);
+					}
+				}
+			}
+		}
+	}
 }
 
 function configFacebook(req){
-    facebook.options({
-        appId: configs.facebookAuth.clientID,
-        appSecret: configs.facebookAuth.clientSecret,
-        redirectUri: configs.facebookAuth.callbackURL
-    });
+	facebook.options({
+		appId: configs.facebookAuth.clientID,
+		appSecret: configs.facebookAuth.clientSecret,
+		redirectUri: configs.facebookAuth.callbackURL
+	});
 
-    return req.session.access_token;
+	return req.session.access_token;
 }
 
 function configExpress(){
-    app = express();
+	app = express();
 
-    // Configure view
-    app.set('views', __dirname + '/client');
-    app.set('view engine', 'ejs');
+	// Configure view
+	app.set('views', __dirname + '/client');
+	app.set('view engine', 'ejs');
 
-    app.use(morgan('dev'));
-    app.use(cookieParser());
-    app.use(bodyParser.urlencoded({ extended: true }));
-    app.use(expressSession({ secret: 'keyboard cat'}));
-    app.use(Facebook.middleware({ appId: configs.facebookAuth.clientID, secret: configs.facebookAuth.clientSecret }));
-    
-    //app.use(express.compress());
-    app.use(express.static(__dirname + '/client'));
+	app.use(morgan('dev'));
+	app.use(cookieParser());
+	app.use(bodyParser.urlencoded({ extended: true }));
+	app.use(expressSession({ secret: 'keyboard cat'}));
+	app.use(Facebook.middleware({ appId: configs.facebookAuth.clientID, secret: configs.facebookAuth.clientSecret }));
+	
+	//app.use(express.compress());
+	app.use(express.static(__dirname + '/client'));
 }
 
 function configRoutes(){
-    app.get("/",  function(req, res){
-        res.render('login');
-    });
+	app.get("/",  function(req, res){
+		res.render('login');
+	});
 
-    app.get("/status/:status",  function(req, res){
-        res.render('login', {status: req.params.status});
-    });
+	app.get("/status/:status",  function(req, res){
+		res.render('login', {status: req.params.status});
+	});
 
-    app.get("/login", Facebook.loginRequired({scope: 'email'}), gameRoute.login);
+	app.get("/login", Facebook.loginRequired({scope: 'email'}), gameRoute.login);
 
-    app.get("/game", function(req, res){
-        gameRoute.game(account, req, res);
-    });
+	app.get("/game", function(req, res){
+		gameRoute.game(account, req, res);
+	});
 
-    app.get("/start/:accountUid", 
-        function(req, res, next){
-            return player.getByAccount(req, res, next);
-        },
-        function(req, res, next){
-            return gameRoute.renderStart(req, res);
-        }
-    );
+	app.get("/start/:accountUid", 
+		function(req, res, next){
+			return player.getByAccount(req, res, next);
+		},
+		function(req, res, next){
+			return gameRoute.renderStart(req, res);
+		}
+	);
 
-    app.get("/create/:facebookID", gameRoute.create);
+	app.get("/create/:facebookID", gameRoute.create);
 
-    app.post("/create", 
-        function(req, res, next){
-            return account.get(req, res, next);
-        }, 
-        function(req, res, next){
-            return account.insert(req, res, next);
-        }, 
-        function(req, res, next){
-            return player.insert(req, res, next);
-        }, 
-        function(req, res, next){
-            return player.associateWithAccount(req, res, next);
-        }, function(req, res, next){
-            return gameRoute.renderCreate(req, res, next);
-        });
+	app.post("/create", 
+		function(req, res, next){
+			return account.get(req, res, next);
+		}, 
+		function(req, res, next){
+			return account.insert(req, res, next);
+		}, 
+		function(req, res, next){
+			return player.insert(req, res, next);
+		}, 
+		function(req, res, next){
+			return player.associateWithAccount(req, res, next);
+		}, function(req, res, next){
+			return gameRoute.renderCreate(req, res, next);
+		});
 }

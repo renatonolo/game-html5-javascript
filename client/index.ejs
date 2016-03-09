@@ -6,19 +6,25 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no">
         <title>Game HTML5</title>
 
+        <link rel="stylesheet" href="/css/normalize.css"/>
         <link rel="stylesheet" href="/css/bootstrap.min.css"/>
         <link rel="stylesheet" href="/css/bootstrap-theme.min.css"/>
         <script type="text/javascript" src="/scripts/jquery-2.2.1.min.js"></script>
         <script type="text/javascript" src="/scripts/bootstrap.min.js"></script>
 
         <script type="text/javascript" src="/scripts/config.js"></script>
+        
+        <script type="text/javascript" src="/scripts/chat.js"></script>
+
         <script type="text/javascript" src="/scripts/main.js"></script>
         <script type="text/javascript" src="/scripts/websocket.js"></script>
         <script type="text/javascript" src="/scripts/map.js"></script>
         <script type="text/javascript" src="/scripts/mouse.js"></script>
         <script type="text/javascript" src="/scripts/player.js"></script>
         <script type="text/javascript" src="/scripts/character.js"></script>
+        
         <script type="text/javascript" src="/scripts/sprites/beginnerDimensions.js"></script>
+        <script type="text/javascript" src="/scripts/sprites/ratDimensions.js"></script>
 
     </head>
 
@@ -29,50 +35,47 @@
     </script>
 
     <body>
+        <!-- Modal -->
         <% if(locals.players) { %>
-            <!-- Modal -->
-        <div id="myModal" class="modal fade" role="dialog">
-            <div class="modal-dialog">
+            <div id="myModal" class="modal fade" role="dialog">
+                <div class="modal-dialog">
 
-                <!-- Modal content-->
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal">&times;</button>
-                        <h4 class="modal-title">Select one character.</h4>
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">Select one character.</h4>
+                        </div>
+                        <div class="modal-body">
+                            <select id="selectPlayer" class="form-control">
+                                <% for(var i = 0; i < players.length; i++){ %>
+                                    <option value="<%= players[i].uid %>"><%= players[i].name %></option>
+                                <% } %>
+                            </select>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" onclick="selectPlayer($('#selectPlayer').val());">Select</button>
+                        </div>
                     </div>
-                    <div class="modal-body">
-                        <select id="selectPlayer" class="form-control">
-                            <% for(var i = 0; i < players.length; i++){ %>
-                                <option value="<%= players[i].uid %>"><%= players[i].name %></option>
-                            <% } %>
-                        </select>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-default" onclick="selectPlayer($('#selectPlayer').val());">Select</button>
-                    </div>
+
                 </div>
-
             </div>
-        </div>
         <% } %>
+        <!-- End of Modal -->
 
-        <div id="main" style="margin-top: 10px; border:1px solid #0F0; margin-left:auto; margin-right:auto; display:table;">
-            <header style="border:1px solid red;">TESTE</header>
-            <div id="middle" style="display:table;">
-                <div id="esq" style="float:left; width:100px; border:1px solid blue;">
-                    Esquerda
-                </div>
-                
-                <div id="center" style="float:left; width:800px; border:1px solid green;">
-                    <canvas id="foreground" width="800" height="480" style="border:1px solid red;">
+        <div id="main" style="margin-top: 10px; margin-left:auto; margin-right:auto; display:table;">
+            <header style="border:1px solid red;">TESTE <b>FPS: </b><span id="fps"></span></header>
+            <div id="middle">                
+                <div id="center" style="float:left; width:800px;">
+                    <canvas id="foreground" width="800" height="480" style="border:1px solid black;">
                         Seu navegador não suporta Canvas do html5. Use um navegador diferente:<br/>
                         <a href="http://www.mozilla-europe.org/en/firefox/">Firefox</a><br/>
                         <a href="http://www.google.com/chrome">Chrome</a>
                     </canvas>
-                </div>
-                
-                <div id="dir" style="width: 100px; border: 1px solid pink; float: left;">
-                    <b>FPS: </b><span id="fps"></span>
+                    <div style="width: 100%;">
+                        <textarea class="form-control" id="textAreaChat" rows="4" readonly="true" style="font-family: verdana; font-size: 8pt;"></textarea>
+                        <input type="text" id="inputTextChat" class="form-control" placeholder="Write here...">
+                    </div>
                 </div>
             </div>
             <div id="console"><b>Console:</b><span id="txtConsole"></span> </div>

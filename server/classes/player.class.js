@@ -122,6 +122,8 @@ function PlayerClass(){
         };
 
         if(rows.length == 1){
+            var sql = "UPDATE players SET online = 1 WHERE uid = '" + rows[0].uid + "'";
+            ctxPlayer.db.query(sql, null, null);
             player = {
                 uid: rows[0].uid,
                 name: rows[0].name,
@@ -156,6 +158,11 @@ function PlayerClass(){
 
         ctxPlayer.ws.send(JSON.stringify(response));
     };
+
+    this.logoff = function(uid){
+        var sql = "UPDATE players SET online = 0 WHERE uid = '" + uid + "'";
+        this.db.query(sql, null, null);
+    }
 
     this.updatePosition = function(uid, x, y, walking, direction){
         if(walking) walking = 1;

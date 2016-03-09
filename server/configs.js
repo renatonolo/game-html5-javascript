@@ -13,7 +13,11 @@ module.exports = {
         'ipaddress': process.env.OPENSHIFT_NODEJS_IP || "127.0.0.1",
         'port': process.env.OPENSHIFT_NODEJS_PORT || 8000,
 
-        'mapsPath': __dirname + '/maps/map.json'
+        'mapsPath': __dirname + '/maps/map.json',
+        'tilesBeforeX': 11,
+        'tilesBeforeY': 6,
+        'tilesAfterX': 13,
+        'tilesAfterY': 8
     },
 
     'mysql': {

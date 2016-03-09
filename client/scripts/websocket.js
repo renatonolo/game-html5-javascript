@@ -20,6 +20,9 @@ function Websocket(host, port){
     this.callbackRefreshCharacter = null;
     this.ctxRefreshCharacter = null;
 
+    this.callbackChatMessageResponse = null;
+    this.ctxChatMessageResponse = null;
+
     this.connect = function(ctx, callback){
         var self = this;
         var url = 'ws://' + this.host + ':' + this.port + '/';
@@ -52,6 +55,10 @@ function Websocket(host, port){
                     break;
                 case "refreshCharacterResponse":
                     this.callbackRefreshCharacter(this.ctxRefreshCharacter, data);
+                    break;
+                case "chatMessageResponse":
+                    this.callbackChatMessageResponse(this.ctxChatMessageResponse, data);
+                    break;
             }
         }
     };

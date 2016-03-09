@@ -33,7 +33,11 @@ function PlayerClass(){
         var limitYMin = y - midY + 1;
         var limitYMax = y + midY - 1;
         
-        var sql = "SELECT * FROM players WHERE position_x >= "+limitXMin+" and position_x <= "+limitXMax+" and position_y >= "+limitYMin+" and position_y <= "+limitYMax;
+        var sql = "SELECT * FROM players WHERE position_x >= " + limitXMin + 
+                    " AND position_x <= " + limitXMax + 
+                    " AND position_y >= " + limitYMin + 
+                    " AND position_y <= " + limitYMax + 
+                    " AND online = 1";
         this.db.query(sql, this, this.loadCharactersCallback);
     };
 
@@ -99,7 +103,7 @@ function PlayerClass(){
             data: character
         };
 
-        console.log(response);
+        //console.log(response);
 
         ctxCharacter.wss.broadcast(JSON.stringify(response));
     };

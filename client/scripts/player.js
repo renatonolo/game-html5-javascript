@@ -29,6 +29,10 @@ function Player(playerUid){
     this.statusTextTime = 0;
     this.printedStatusText = "";
 
+    this.chatMessage = "";
+    this.chatMessageTime = 0;
+    this.printedChatMessage = "";
+
     this.setup = function(ctx){
         this.imgPlayer = new Image();
         this.websocket = ctx.websocket;
@@ -174,8 +178,9 @@ function Player(playerUid){
         }
     };
 
-    this.drawName = function(ctx){
+    this.drawName = function(ctx, elapsed){
         var player = ctx.player;
+        var toPrint = player.name;
         var posX = Math.round(config.screenTileW / 2) * config.tileW - config.tileW;
         var posY = Math.round(config.screenTileH / 2) * config.tileH - (2 * config.tileH);
 
@@ -185,10 +190,42 @@ function Player(playerUid){
         aux = player.position.y - ctx.map.position.y;
         posY += aux * config.tileH + player.offsetY;
 
-        ctx.foreground.font = "bold 11px Verdana";
+        if(player.chatMessage != ""){
+            if(player.chatMessage.length > 50){
+                var splitCount = Math.round(player.chatMessage.length / 50);
+                for(var i = 0; i < splitCount; i++) player.printedChatMessage += player.chatMessage.substr(i * 50, 50) + '\n';
+            } else player.printedChatMessage = player.chatMessage;
+            player.chatMessage = "";
+        } else {
+            if(player.printedChatMessage != ""){
+                player.chatMessageTime += elapsed
+                if(player.chatMessageTime <= 7000){
+                    toPrint += ":\n" + player.printedChatMessage;
+                } else {
+                    player.chatMessageTime = 0;
+                    player.printedChatMessage = "";
+                }
+            }
+        }
+
+        ctx.foreground.font = "900 9pt Verdana";
+        ctx.foreground.lineWidth = 0.5;
         ctx.foreground.fillStyle = "#00FF00";
+        ctx.foreground.strokeStyle = 'black';
         ctx.foreground.textAlign = "center";
-        ctx.foreground.fillText(player.name, (posX + (config.tileW / 2)), (posY - 5));
+
+        var lines = toPrint.split('\n');
+        if(lines.length > 1){
+            for(var i = 0; i < lines.length; i++){
+                y = (posY - 5);
+                y = y - ((lines.length - 1 - i) * 15);
+                ctx.foreground.fillText(lines[i], (posX + (config.tileW / 2)), y);
+                ctx.foreground.strokeText(lines[i], (posX + (config.tileW / 2)), y);
+            }
+        } else {
+            ctx.foreground.fillText(toPrint, (posX + (config.tileW / 2)), (posY - 5));
+            ctx.foreground.strokeText(toPrint, (posX + (config.tileW / 2)), (posY - 5));
+        }
     }
 
     this.handleTileInfo = function(ctx, data){
@@ -211,20 +248,24 @@ function Player(playerUid){
     this.drawStatusText = function(ctx, elapsed){
         if(ctx.player.statusText != ""){
             ctx.player.printedStatusText = ctx.player.statusText;
-            ctx.foreground.font = "bold 12px Verdana";
+            ctx.foreground.font = "900 13px Verdana";
+            ctx.foreground.lineWidth = 0.5;
             ctx.foreground.fillStyle = "#FFFFFF";
             ctx.foreground.textAlign = "center";
             ctx.foreground.fillText(ctx.player.printedStatusText, ((config.screenTileW * config.tileW) / 2), (config.screenTileH * config.tileH - 4));
+            ctx.foreground.strokeText(ctx.player.printedStatusText, ((config.screenTileW * config.tileW) / 2), (config.screenTileH * config.tileH - 4));
             ctx.player.statusTextTime = 0;
             ctx.player.statusText = "";
         } else {
             if(ctx.player.statusTextTime > config.statusTextTime && ctx.player.printedStatusText != ""){
                 ctx.player.printedStatusText = "";
             } else {
-                ctx.foreground.font = "bold 12px Verdana";
+                ctx.foreground.font = "900 13px Verdana";
+                ctx.foreground.lineWidth = 0.5;
                 ctx.foreground.fillStyle = "#FFFFFF";
                 ctx.foreground.textAlign = "center";
                 ctx.foreground.fillText(ctx.player.printedStatusText, ((config.screenTileW * config.tileW) / 2), (config.screenTileH * config.tileH - 4));
+                ctx.foreground.strokeText(ctx.player.printedStatusText, ((config.screenTileW * config.tileW) / 2), (config.screenTileH * config.tileH - 4));
                 ctx.player.statusTextTime += elapsed;
             }
         }

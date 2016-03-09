@@ -12,8 +12,11 @@ function Main(){
     this.websocket = null;
     this.mouse = null;
     this.player = null;
+    this.chat = null;
+
     this.characters = {};
     this.character = null;
+
     this.spanFps = null;
     this.frameAnimation = 1;
     this.mapLoaded = null;
@@ -33,16 +36,20 @@ function Main(){
         this.canvas = document.getElementById("foreground");
         this.foreground = this.canvas.getContext('2d');
         this.spanFps = document.getElementById("fps");
+        var inputTextChat = document.getElementById("inputTextChat");
+        var textAreaChat = document.getElementById("textAreaChat");
 
         this.websocket = new Websocket(config.hostWS, config.portWS);
         this.map = new Map(this.foreground);
         this.mouse = new Mouse(this.canvas, this.foreground);
         this.player = new Player(this.playerUid);
         this.character = new Character();
+        this.chat = new Chat();
 
         this.map.setup();
         this.mouse.setup(this);
         this.character.setup();
+        this.chat.setup(this.websocket, inputTextChat, textAreaChat, this.map, this.player, this.characters);
 
         this.fps = config.fps;
         this.fpsInterval = 1000 / this.fps;
@@ -102,10 +109,9 @@ function Main(){
                 ctx.character.draw(ctx);
                 ctx.player.draw(ctx);
                 ctx.map.draw(ctx.map, ctx.mapLoaded, ctx.elapsed, 2);
-                ctx.character.drawName(ctx);
-                ctx.player.drawName(ctx);
+                ctx.character.drawName(ctx, ctx.elapsed);
+                ctx.player.drawName(ctx, ctx.elapsed);
                 ctx.player.drawStatusText(ctx, ctx.elapsed);
-                //ctx.map.draw(ctx.map, ctx.mapLoaded, ctx.elapsed, 3);
             }
 
             //Frame annimation
@@ -122,5 +128,4 @@ function Main(){
             ctx.spanFps.innerHTML = currentFps;
         }
     };
-
 }

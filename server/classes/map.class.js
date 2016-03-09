@@ -4,10 +4,20 @@ function MapClass(){
     this.tilesets = null;
     this.db = null;
 
-    this.setup = function(mapJson, db){
+    this.tilesBeforeX = 0;
+    this.tilesBeforeY = 0;
+    this.tilesAfterX = 0;
+    this.tilesAfterY = 0;
+
+    this.setup = function(mapJson, db, beforeX, beforeY, afterX, afterY){
         this.mapJson = mapJson;
         this.tilesets = this.loadTileSets();
         this.db = db;
+
+        this.tilesBeforeX = beforeX;
+        this.tilesBeforeY = beforeY;
+        this.tilesAfterX = afterX;
+        this.tilesAfterY = afterY;
     };
 
     this.loadMap = function(ws, x, y){
@@ -25,7 +35,6 @@ function MapClass(){
                 status: 0, // Success
                 data: tiles
             };
-            //console.log(JSON.stringify(response));
         }
 
         ws.send(JSON.stringify(response));
@@ -38,30 +47,19 @@ function MapClass(){
         layers.map = [];
         layers.tilesets = this.tilesets;
 
-        /**
-         * Tiles to count before and after from center
-         * Add +1 to exced the canvas on client... 
-         * It is because when the player is walking, we need to have a buffer to load map...
-         */
-        var tilesBeforeX = 11, //11 + 1
-            tilesBeforeY = 6, //6 + 1
-            tilesAfterX = 13, //13 + 1
-            tilesAfterY = 8; //7 + 1
-
-
         for(var i = 0; i < this.mapJson.layers.length; i++){
             layers.map[i] = [];
         }
         
         var pos = 0;
 
-        var initX = _x - tilesBeforeX;
-        var endX = _x + tilesAfterX;
+        var initX = _x - this.tilesBeforeX;
+        var endX = _x + this.tilesAfterX;
         if(initX <= 0) initX = 1;
         if(initX > this.mapJson.width) initX = this.mapJson.width;
 
-        var initY = _y - tilesBeforeY;
-        var endY = _y + tilesAfterY;
+        var initY = _y - this.tilesBeforeY;
+        var endY = _y + this.tilesAfterY;
         if(initY <= 0) initY = 1;
         if(initY > this.mapJson.height) initY = this.mapJson.height;
 
@@ -123,7 +121,6 @@ function MapClass(){
                 }
             }
         }
-        //console.log(dataTiles);
         return dataTiles;
     };
 
@@ -146,7 +143,11 @@ function MapClass(){
 
             var collision = ctxMap.getCollision(x, y);
             var tileId = collision.lastId;
-            var way = ctxMap.getWayToTile(ctxMap, from, to);
+
+            var way = null;
+
+            if(collision.collision == false) way = ctxMap.getWayToTile(ctxMap, from, to);
+
 
             var tileInfo = {
                 lastId: collision.lastId,
@@ -249,10 +250,7 @@ function MapClass(){
             }
             openNodes.sort(this.byCost);
             currentNode = openNodes.shift();
-            //console.log(currentNode);
-            //console.log("==================");
         }
-        //console.log(openNodes);
         var path = [];
         path = this.buildPath(currentNode, firstNode);
         return this.getDirections(path);

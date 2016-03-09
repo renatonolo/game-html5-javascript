@@ -9,6 +9,10 @@ function Character(){
     this.frameAnimation = 0;
     this.walkingAnnimation = 0;
 
+    this.chatMessage = "";
+    this.chatMessageTime = 0;
+    this.printedChatMessage = "";
+
     this.setup = function(){
         this.imgCharacter[0] = new Image(); //Beginner
         this.imgCharacter[0].src = config.imgBeginnerPath; //Beginner
@@ -80,6 +84,9 @@ function Character(){
                 char.wayToGo = [];
                 char.wayToGo.push(data.data[i].position);
                 char.position = data.data[i].position;
+                char.chatMessage = "";
+                char.chatMessageTime = 0;
+                char.printedChatMessage = "";
 
                 char.walkingAnnimation = 0;
                 char.offsetX = 0;
@@ -196,10 +203,11 @@ function Character(){
         }
     };
 
-    this.drawName = function(main){
+    this.drawName = function(main, elapsed){
         
         for(var uid in main.characters){
             var char = main.characters[uid];
+            var toPrint = char.name;
             var position = char.wayToGo[0];
 
             var posX = Math.round(config.screenTileW / 2) * config.tileW - config.tileW;
@@ -211,10 +219,45 @@ function Character(){
             aux = position.y - main.map.position.y;
             posY += aux * config.tileH + char.offsetY;
 
-            main.foreground.font = "bold 11px Verdana";
+            if(char.chatMessage != "" && char.chatMessage != undefined){
+                if(char.chatMessage.length > 50){
+                    var splitCount = Math.round(char.chatMessage.length / 50);
+                    for(var i = 0; i < splitCount; i++) char.printedChatMessage += char.chatMessage.substr(i * 50, 50) + '\n';
+                } else char.printedChatMessage = char.chatMessage;
+                char.chatMessage = "";
+            } else {
+                if(char.printedChatMessage != ""){
+                    console.log("PrintedMessage: " + char.printedChatMessage);
+                    char.chatMessageTime += elapsed;
+                    console.log("Time: " + char.chatMessageTime);
+                    if(char.chatMessageTime <= 7000){
+                        toPrint += ":\n" + char.printedChatMessage;
+                    } else {
+                        char.chatMessageTime = 0;
+                        char.printedChatMessage = "";
+                    }
+                }
+            }
+
+            main.foreground.font = "900 9pt Verdana";
+            main.foreground.lineWidth = 0.5;
             main.foreground.fillStyle = "#00FF00";
+            main.foreground.strokeStyle = 'black';
             main.foreground.textAlign = "center";
-            main.foreground.fillText(char.name, (posX + (config.tileW / 2)), (posY - 5));
+
+            var lines = toPrint.split('\n');
+            if(lines.length > 1){
+                for(var i = 0; i < lines.length; i++){
+                    var y = (posY - 5);
+                    y = y - ((lines.length - 1 - i) * 15);
+
+                    main.foreground.fillText(lines[i], (posX + (config.tileW / 2)), y);
+                    main.foreground.strokeText(lines[i], (posX + (config.tileW / 2)), y);
+                }
+            } else {
+                main.foreground.fillText(toPrint, (posX + (config.tileW / 2)), (posY - 5));
+                main.foreground.strokeText(toPrint, (posX + (config.tileW / 2)), (posY - 5));
+            }
         }
     }
 }
