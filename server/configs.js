@@ -24,7 +24,7 @@ module.exports = {
         'host': process.env.OPENSHIFT_MYSQL_DB_HOST || "127.0.0.1",
         'port': process.env.OPENSHIFT_MYSQL_DB_PORT || "3306",
         'username': 'root',
-        'password': '159357',
+        'password': 'xxxxxx',
         'database': 'gameHTML5'
         //'username': 'admin1Dc4G2u',
         //'password': 'HVXQEb8Dv_F8',
